@@ -39,7 +39,7 @@
 #include "oflib/ofl-structs.h"
 #include "oflib/ofl-messages.h"
 #include "oflib-exp/ofl-exp-openflow.h"
-#include "oflib-exp/ofl-exp-msg-nicira.h"
+#include "oflib-exp/ofl-exp-nicira.h"
 #include "openflow/openflow.h"
 #include "openflow/openflow-ext.h"
 #include "openflow/nicira-ext.h"
