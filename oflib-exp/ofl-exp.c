@@ -34,7 +34,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "ofl-exp.h"
-#include "ofl-exp-nicira.h"
+#include "ofl-exp-msg-nicira.h"
 #include "ofl-exp-openflow.h"
 #include "../oflib/ofl-messages.h"
 #include "../oflib/ofl-log.h"

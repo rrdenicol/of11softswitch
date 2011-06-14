@@ -192,8 +192,11 @@ struct ofl_match_standard {
     uint64_t   metadata_mask;    /* Mask for metadata. */
 };
 
+struct ofl_match_experimenter {
+    struct ofl_match_header   header; /* OFPAT_EXPERIMENTER. */
 
-
+    uint32_t  experimenter_id; /* Experimenter ID */
+};
 
 struct ofl_port_stats {
     uint32_t   port_no;

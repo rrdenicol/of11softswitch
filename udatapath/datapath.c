@@ -54,7 +54,7 @@
 #include "group_table.h"
 #include "oflib/ofl.h"
 #include "oflib-exp/ofl-exp.h"
-#include "oflib-exp/ofl-exp-nicira.h"
+#include "oflib-exp/ofl-exp-msg-nicira.h"
 #include "oflib/ofl-messages.h"
 #include "oflib/ofl-log.h"
 #include "openflow/openflow.h"
