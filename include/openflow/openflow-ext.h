@@ -147,3 +147,4 @@ OFP_ASSERT(sizeof(struct ofp_queue_prop_sched_weight) == 16);
 
 
 #endif /* OPENFLOW_OPENFLOW_EXT_H */
+

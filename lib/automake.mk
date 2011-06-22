@@ -23,6 +23,7 @@ lib_libopenflow_a_SOURCES = \
 	lib/fatal-signal.h \
 	lib/fault.c \
 	lib/fault.h \
+	lib/flex-array.h \
 	lib/flow.c \
 	lib/flow.h \
 	lib/hash.c \
