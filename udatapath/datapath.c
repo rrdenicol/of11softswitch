@@ -55,6 +55,7 @@
 #include "oflib/ofl.h"
 #include "oflib-exp/ofl-exp.h"
 #include "oflib-exp/ofl-exp-nicira.h"
+#include "oflib-exp/ofl-exp-match.h"
 #include "oflib/ofl-messages.h"
 #include "oflib/ofl-log.h"
 #include "openflow/openflow.h"
@@ -120,10 +121,16 @@ static struct ofl_exp_msg dp_exp_msg =
          .free      = ofl_exp_msg_free,
          .to_string = ofl_exp_msg_to_string};
 
+static struct ofl_exp_match dp_exp_match =
+        {.pack      = ofl_exp_match_pack,
+         .unpack    = ofl_exp_match_unpack,
+         .free      = ofl_exp_match_free,
+         .to_string = ofl_exp_match_to_str};
+
 static struct ofl_exp dp_exp =
         {.act   = NULL,
          .inst  = NULL,
-         .match = NULL,
+         .match = &dp_exp_match,
          .stats = NULL,
          .msg   = &dp_exp_msg};
 

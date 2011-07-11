@@ -1,8 +1,39 @@
+/* Copyright (c) 2011, CPqD, Brasil
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
+ *
+ *   * Redistributions of source code must retain the above copyright notice,
+ *     this list of conditions and the following disclaimer.
+ *   * Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in the
+ *     documentation and/or other materials provided with the distribution.
+ *   * Neither the name of the Ericsson Research nor the names of its
+ *     contributors may be used to endorse or promote products derived from
+ *     this software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
+ *
+ *
+ * Author: Eder Leão Fernandes <ederlf@cpqd.com.br>
+ */
+
 #ifndef MATCH_EXT_H
 #define MATCH_EXT_H 1
 
 #include "openflow/openflow.h"
-#include "../flex-array.h"
+#include "lib/flex-array.h"
 
 /* Flexible flow specifications (aka NXM = Nicira Extended Match).
  *
@@ -486,11 +517,12 @@
 #define NXM_METADATA       NXM_HEADER  (0x0000, 26, 8)
 #define NXM_METADATA_W     NXM_HEADER  (0x0000, 26, 8)
 
-struct nx_match
+struct ext_match
 {
     uint16_t type;                   /* One of OFPMT_* */
     uint16_t length;                 /* Length of ofp_match */
     uint32_t wildcards;              /* Wildcard fields. */
+    uint8_t pad1[4];                 /*Allign to 64 bits */
     struct flex_array *match_fields; /* Match fields */   
 
 } __attribute__ ((packed));
@@ -513,7 +545,7 @@ struct nxt_set_flow_format {
     uint32_t subtype;           /* NXT_SET_FLOW_FORMAT. */
     uint32_t format;            /* One of NXFF_*. */
 };
-OFP_ASSERT(sizeof(struct nxt_set_flow_format) == 20);
+OFP_ASSERT(sizeof(struct nxt_set_flow_format) == 16);
 
 /* NXT_FLOW_MOD (analogous to OFPT_FLOW_MOD). */
 struct nx_flow_mod {
@@ -531,6 +563,7 @@ struct nx_flow_mod {
                                      indicates no restriction. */
     uint16_t flags;                /* One of OFPFF_*. */
     struct ext_match match;	       /* Extended match */
+   
     struct ofp_instruction instructions[0]; /* Instruction set. */
     /* Followed by:
      *   - Exactly match_len (possibly 0) bytes containing the nx_match, then
@@ -562,21 +595,20 @@ struct nx_flow_removed {
      *   - Exactly (match_len + 7)/8*8 - match_len (between 0 and 7) bytes of
      *     all-zero bytes. */
 };
-OFP_ASSERT(sizeof(struct nx_flow_removed) == 56);
+OFP_ASSERT(sizeof(struct nx_flow_removed) == 64);
 
 /* Nicira vendor stats request of type NXST_FLOW (analogous to OFPST_FLOW
  * request). */
 struct nx_flow_stats_request {
     uint8_t table_id;         /* ID of table to read (from ofp_table_stats),
                                  0xff for all tables. */
-    uint8_t pad[3];           /* Align to 64 bits. */
+    uint8_t pad1;               /* Align to 64 bits. */
     uint16_t out_port;        /* Require matching entries to include this
                                  as an output port.  A value of OFPP_NONE
                                  indicates no restriction. */
-     uint32_t out_group;       /* Require matching entries to include this
+    uint32_t out_group;       /* Require matching entries to include this
                                  as an output group.  A value of OFPG_ANY
                                  indicates no restriction. */
-    uint8_t pad2[4];          /* Align to 64 bits. */
     uint64_t cookie;          /* Require matching entries to contain this
                                  cookie value */
     uint64_t cookie_mask;     /* Mask used to restrict the cookie bits that
@@ -590,7 +622,7 @@ struct nx_flow_stats_request {
      *     message.
      */
 };
-OFP_ASSERT(sizeof(struct nx_flow_stats_request) == 32);
+OFP_ASSERT(sizeof(struct nx_flow_stats_request) == 40);
 
 /* Body for Nicira vendor stats reply of type NXST_FLOW (analogous to
  * OFPST_FLOW reply). */
@@ -619,21 +651,20 @@ struct nx_flow_stats {
      *     of 8).
      */
 };
-OFP_ASSERT(sizeof(struct nx_flow_stats) == 48);
+OFP_ASSERT(sizeof(struct nx_flow_stats) == 64);
 
 /* Nicira vendor stats request of type NXST_AGGREGATE (analogous to
  * OFPST_AGGREGATE request). */
 struct nx_aggregate_stats_request {
     uint8_t table_id;         /* ID of table to read (from ofp_table_stats)
                                  0xff for all tables. */
-    uint8_t pad[3];           /* Align to 64 bits. */
+    uint8_t pad;           /* Align to 64 bits. */
     uint16_t out_port;        /* Require matching entries to include this
                                  as an output port.  A value of OFPP_NONE
                                  indicates no restriction. */
     uint32_t out_group;       /* Require matching entries to include this
                                  as an output group.  A value of OFPG_ANY
                                  indicates no restriction. */
-    uint8_t pad2[4];          /* Align to 64 bits. */
     uint64_t cookie;          /* Require matching entries to contain this
                                  cookie value */
     uint64_t cookie_mask;     /* Mask used to restrict the cookie bits that
@@ -647,7 +678,7 @@ struct nx_aggregate_stats_request {
      *     message.
      */
 };
-OFP_ASSERT(sizeof(struct nx_aggregate_stats_request) == 32);
+OFP_ASSERT(sizeof(struct nx_aggregate_stats_request) == 40);
 
 
 #endif /* openflow/match-ext.h */

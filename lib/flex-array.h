@@ -5,12 +5,11 @@
 
 /*A flexible array structure */
 struct flex_array {
-       struct {
-             uint32_t size;  /* Array size */
-             uint32_t total; /* Number of entries */
-             uint8_t entries[]; /* */
-        };
-          
+
+   uint32_t size;  /* Array size */
+   uint32_t total; /* Number of entries */
+   uint8_t entries[]; /* */
+         
 };
 
 #endif /* flex-array.h */
