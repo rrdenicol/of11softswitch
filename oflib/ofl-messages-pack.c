@@ -174,7 +174,7 @@ ofl_msg_pack_flow_removed(struct ofl_msg_flow_removed *msg, uint8_t **buf, size_
     ofr->packet_count  = hton64(msg->stats->packet_count);
     ofr->byte_count    = hton64(msg->stats->byte_count);
 
-    ofl_structs_match_pack(msg->stats->match, &(ofr->match), exp);
+    ofl_structs_match_pack(msg->stats->match, &(ofr->match.header), exp);
 
     return 0;
 }
@@ -249,7 +249,7 @@ ofl_msg_pack_flow_mod(struct ofl_msg_flow_mod *msg, uint8_t **buf, size_t *buf_l
     flow_mod->flags        = htons( msg->flags);
     memset(flow_mod->pad, 0x00, 2);
 
-    ofl_structs_match_pack(msg->match, &(flow_mod->match), exp);
+    ofl_structs_match_pack(msg->match, &(flow_mod->match.header), exp);
 
     ptr = (*buf) + sizeof(struct ofp_flow_mod);
 
@@ -337,7 +337,7 @@ ofl_msg_pack_stats_request_flow(struct ofl_msg_stats_request_flow *msg, uint8_t 
     stats->cookie      = hton64(msg->cookie);
     stats->cookie_mask = hton64(msg->cookie_mask);
 
-    ofl_structs_match_pack(msg->match, &(stats->match), exp);
+    ofl_structs_match_pack(msg->match, &(stats->match.header), exp);
 
     return 0;
 }

@@ -629,6 +629,7 @@ enum ofp_vlan_id {
 /* Define for compatibility */
 #define OFP_VLAN_NONE      OFPVID_NONE
 
+
 /* The match type indicates the match structure (set of fields that compose the
  * match) in use. The match type is placed in the type field at the beginning
  * of all match structures. The "standard" type corresponds to ofp_match and
@@ -641,13 +642,20 @@ enum ofp_match_type {
                                  structure apply */
 };
 
+struct ofp_match_header{
+
+    uint16_t type;             /* One of OFPMT_* */
+    uint16_t length;           /* Length of ofp_match */
+
+};
+
 /* Size/length of STANDARD match */
 #define OFPMT_STANDARD_LENGTH   88
 
 /* Fields to match against flows */
 struct ofp_match {
-    uint16_t type;             /* One of OFPMT_* */
-    uint16_t length;           /* Length of ofp_match */
+    struct ofp_match_header header; 
+    
     uint32_t in_port;          /* Input switch port. */
     uint32_t wildcards;        /* Wildcard fields. */
     uint8_t dl_src[OFP_ETH_ALEN]; /* Ethernet source address. */

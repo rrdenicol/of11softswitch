@@ -297,7 +297,7 @@ ofl_structs_flow_stats_unpack(struct ofp_flow_stats *src, size_t *len, struct of
     s->packet_count =  ntoh64(src->packet_count);
     s->byte_count =    ntoh64(src->byte_count);
 
-    error = ofl_structs_match_unpack(&(src->match), len, &(s->match), exp);
+    error = ofl_structs_match_unpack(&(src->match.header), len, &(s->match), exp);
     if (error) {
         free(s);
         return error;
@@ -697,49 +697,50 @@ ofl_structs_bucket_counter_unpack(struct ofp_bucket_counter *src, size_t *len, s
 }
 
 static ofl_err
-ofl_structs_match_standard_unpack(struct ofp_match *src, size_t *len, struct ofl_match_standard **dst) {
+ofl_structs_match_standard_unpack(struct ofp_match_header *src, size_t *len, struct ofl_match_standard **dst) {
     struct ofl_match_standard *m;
+    struct ofp_match *src_match = (struct ofp_match*) src; 
 
     if (*len < OFPMT_STANDARD_LENGTH) {
         OFL_LOG_WARN(LOG_MODULE, "Received standard match is too short (%zu).", *len);
         return ofl_error(OFPET_BAD_MATCH, OFPBMC_BAD_LEN);
     }
 
-    if (*len < ntohs(src->length)) {
-        OFL_LOG_WARN(LOG_MODULE, "Received standard match has invalid length (set to %u, but only %zu received).", ntohs(src->length), *len);
+    if (*len < ntohs(src_match->header.length)) {
+        OFL_LOG_WARN(LOG_MODULE, "Received standard match has invalid length (set to %u, but only %zu received).", ntohs(src_match->header.length), *len);
         return ofl_error(OFPET_BAD_MATCH, OFPBMC_BAD_LEN);
     }
 
     // NOTE: According to oftest/oft-1.1 VlanWildOutrange tests,
     //       VID is only to be tested if it is not wildcarded
-    if (((ntohl(src->wildcards) & OFPFW_DL_VLAN) == 0) &&
-            (ntohs(src->dl_vlan) != OFPVID_NONE) && (ntohs(src->dl_vlan) != OFPVID_ANY) &&
-            (ntohs(src->dl_vlan) > VLAN_VID_MAX)) {
-        OFL_LOG_WARN(LOG_MODULE, "Received match has invalid vlan vid (%u).", ntohs(src->dl_vlan));
+    if (((ntohl(src_match->wildcards) & OFPFW_DL_VLAN) == 0) &&
+            (ntohs(src_match->dl_vlan) != OFPVID_NONE) && (ntohs(src_match->dl_vlan) != OFPVID_ANY) &&
+            (ntohs(src_match->dl_vlan) > VLAN_VID_MAX)) {
+        OFL_LOG_WARN(LOG_MODULE, "Received match has invalid vlan vid (%u).", ntohs(src_match->dl_vlan));
         return ofl_error(OFPET_BAD_MATCH, OFPBMC_BAD_VALUE);
     }
 
     // NOTE: According to oftest/oft-1.1 VlanWildOutrange tests,
     //       PCP is only to be tested if it is not wildcarded
-    if (((ntohl(src->wildcards) & OFPFW_DL_VLAN_PCP) == 0) &&
-           (src->dl_vlan_pcp > VLAN_PCP_MAX)) {
-        OFL_LOG_WARN(LOG_MODULE, "Received match has invalid vlan pcp (%u).", src->dl_vlan_pcp);
+    if (((ntohl(src_match->wildcards) & OFPFW_DL_VLAN_PCP) == 0) &&
+           (src_match->dl_vlan_pcp > VLAN_PCP_MAX)) {
+        OFL_LOG_WARN(LOG_MODULE, "Received match has invalid vlan pcp (%u).", src_match->dl_vlan_pcp);
         return ofl_error(OFPET_BAD_MATCH, OFPBMC_BAD_VALUE);
     }
 
     // NOTE: According to oftest/oft-1.1 MplsWildLabelExactTcOutrange tests,
     //       Label is only to be tested if it is not wildcarded
-    if (((ntohl(src->wildcards) & OFPFW_MPLS_LABEL) == 0) &&
-            (ntohl(src->mpls_label) > MPLS_LABEL_MAX)) {
-        OFL_LOG_WARN(LOG_MODULE, "Received match has invalid mpls label (%u).", ntohl(src->mpls_label));
+    if (((ntohl(src_match->wildcards) & OFPFW_MPLS_LABEL) == 0) &&
+            (ntohl(src_match->mpls_label) > MPLS_LABEL_MAX)) {
+        OFL_LOG_WARN(LOG_MODULE, "Received match has invalid mpls label (%u).", ntohl(src_match->mpls_label));
         return ofl_error(OFPET_BAD_MATCH, OFPBMC_BAD_VALUE);
     }
 
     // NOTE: According to oftest/oft-1.1 MplsWildLabelExactTcOutrange tests,
     //       TC is only to be tested if it is not wildcarded
-    if (((ntohl(src->wildcards) & OFPFW_MPLS_TC) == 0) &&
-            (src->mpls_tc > MPLS_TC_MAX)) {
-        OFL_LOG_WARN(LOG_MODULE, "Received match has invalid mpls tc (%u).", src->mpls_tc);
+    if (((ntohl(src_match->wildcards) & OFPFW_MPLS_TC) == 0) &&
+            (src_match->mpls_tc > MPLS_TC_MAX)) {
+        OFL_LOG_WARN(LOG_MODULE, "Received match has invalid mpls tc (%u).", src_match->mpls_tc);
         return ofl_error(OFPET_BAD_MATCH, OFPBMC_BAD_VALUE);
     }
     *len -= OFPMT_STANDARD_LENGTH;
@@ -750,47 +751,47 @@ ofl_structs_match_standard_unpack(struct ofp_match *src, size_t *len, struct ofl
              updating this match structure, or by other means. */
     m = (struct ofl_match_standard *)malloc(sizeof(struct ofl_match_standard));
     m->header.type =          OFPMT_STANDARD;
-    m->in_port =       ntohl( src->in_port);
-    m->wildcards =     ntohl( src->wildcards);
+    m->in_port =       ntohl( src_match->in_port);
+    m->wildcards =     ntohl( src_match->wildcards);
 
     /* ETH */
-    memcpy(&(m->dl_src),      &(src->dl_src),      OFP_ETH_ALEN);
-    memcpy(&(m->dl_src_mask), &(src->dl_src_mask), OFP_ETH_ALEN);
-    memcpy(&(m->dl_dst),      &(src->dl_dst),      OFP_ETH_ALEN);
-    memcpy(&(m->dl_dst_mask), &(src->dl_dst_mask), OFP_ETH_ALEN);
+    memcpy(&(m->dl_src),      &(src_match->dl_src),      OFP_ETH_ALEN);
+    memcpy(&(m->dl_src_mask), &(src_match->dl_src_mask), OFP_ETH_ALEN);
+    memcpy(&(m->dl_dst),      &(src_match->dl_dst),      OFP_ETH_ALEN);
+    memcpy(&(m->dl_dst_mask), &(src_match->dl_dst_mask), OFP_ETH_ALEN);
 
     /* VLAN */
-    m->dl_vlan =       ntohs( src->dl_vlan);
-    m->dl_vlan_pcp =          src->dl_vlan_pcp;
+    m->dl_vlan =       ntohs( src_match->dl_vlan);
+    m->dl_vlan_pcp =          src_match->dl_vlan_pcp;
 
-    m->dl_type =       ntohs( src->dl_type);
+    m->dl_type =       ntohs( src_match->dl_type);
 
     /* IPv4 / ARP */
-    m->nw_tos =               src->nw_tos;
-    m->nw_proto =             src->nw_proto;
-    m->nw_src =               src->nw_src;
-    m->nw_src_mask =          src->nw_src_mask;
-    m->nw_dst =               src->nw_dst;
-    m->nw_dst_mask =          src->nw_dst_mask;
+    m->nw_tos =               src_match->nw_tos;
+    m->nw_proto =             src_match->nw_proto;
+    m->nw_src =               src_match->nw_src;
+    m->nw_src_mask =          src_match->nw_src_mask;
+    m->nw_dst =               src_match->nw_dst;
+    m->nw_dst_mask =          src_match->nw_dst_mask;
 
     /* Transport */
-    m->tp_src =        ntohs( src->tp_src);
-    m->tp_dst =        ntohs( src->tp_dst);
+    m->tp_src =        ntohs( src_match->tp_src);
+    m->tp_dst =        ntohs( src_match->tp_dst);
 
     /* MPLS */
-    m->mpls_label =    ntohl( src->mpls_label);
-    m->mpls_tc =              src->mpls_tc;
+    m->mpls_label =    ntohl( src_match->mpls_label);
+    m->mpls_tc =              src_match->mpls_tc;
 
     /* Metadata */
-    m->metadata =      ntoh64(src->metadata);
-    m->metadata_mask = ntoh64(src->metadata_mask);
+    m->metadata =      ntoh64(src_match->metadata);
+    m->metadata_mask = ntoh64(src_match->metadata_mask);
 
     *dst = m;
     return 0;
 }
 
 ofl_err
-ofl_structs_match_unpack(struct ofp_match *src, size_t *len, struct ofl_match_header **dst, struct ofl_exp *exp) {
+ofl_structs_match_unpack(struct ofp_match_header *src, size_t *len, struct ofl_match_header **dst, struct ofl_exp *exp) {
 
     switch (ntohs(src->type)) {
         case (OFPMT_STANDARD): {

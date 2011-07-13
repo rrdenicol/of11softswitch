@@ -276,7 +276,7 @@ ofl_msg_unpack_flow_removed(struct ofp_header *src, size_t *len, struct ofl_msg_
     dr->stats->instructions_num = 0;
     dr->stats->instructions     = NULL;
 
-    error = ofl_structs_match_unpack(&(sr->match), len, &(dr->stats->match), exp);
+    error = ofl_structs_match_unpack(&(sr->match.header), len, &(dr->stats->match), exp);
     if (error) {
         free(dr->stats);
         free(dr);
@@ -421,7 +421,7 @@ ofl_msg_unpack_flow_mod(struct ofp_header *src, size_t *len, struct ofl_msg_head
     dm->out_group =    ntohl( sm->out_group);
     dm->flags =        ntohs( sm->flags);
 
-    error = ofl_structs_match_unpack(&(sm->match), len, &(dm->match), exp);
+    error = ofl_structs_match_unpack(&(sm->match.header), len, &(dm->match), exp);
 
     if (error) {
         free(dm);
@@ -609,7 +609,7 @@ ofl_msg_unpack_stats_request_flow(struct ofp_stats_request *os, size_t *len, str
     dm->cookie = ntoh64(sm->cookie);
     dm->cookie_mask = ntoh64(sm->cookie_mask);
 
-    error = ofl_structs_match_unpack(&(sm->match), len, &(dm->match), exp);
+    error = ofl_structs_match_unpack(&(sm->match.header), len, &(dm->match), exp);
     if (error) {
         free(dm);
         return error;

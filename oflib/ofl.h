@@ -100,8 +100,8 @@ struct ofl_exp_inst {
 
 /* Callback functions for handling experimenter match structures. */
 struct ofl_exp_match {
-    int     (*pack)           (struct ofl_match_header *src, struct ofp_match *dst);
-    ofl_err (*unpack)         (struct ofp_match *src, size_t *len, struct ofl_match_header **dst);
+    int     (*pack)           (struct ofl_match_header *src, struct ofp_match_header *dst);
+    ofl_err (*unpack)         (struct ofp_match_header *src, size_t *len, struct ofl_match_header **dst);
     int     (*free)           (struct ofl_match_header *m);
     size_t  (*ofp_len)        (struct ofl_match_header *m);
     char   *(*to_string)      (struct ofl_match_header *m);

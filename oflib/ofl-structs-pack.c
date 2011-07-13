@@ -251,7 +251,7 @@ ofl_structs_flow_stats_pack(struct ofl_flow_stats *src, struct ofp_flow_stats *d
     dst->packet_count = hton64(src->packet_count);
     dst->byte_count = hton64(src->byte_count);
 
-    ofl_structs_match_pack(src->match, &(dst->match), exp);
+    ofl_structs_match_pack(src->match, &(dst->match.header), exp);
 
 
     data = (uint8_t *)dst->instructions;
@@ -532,36 +532,37 @@ ofl_structs_match_ofp_len(struct ofl_match_header *match, struct ofl_exp *exp) {
 
 
 size_t
-ofl_structs_match_pack(struct ofl_match_header *src, struct ofp_match *dst, struct ofl_exp *exp) {
+ofl_structs_match_pack(struct ofl_match_header *src, struct ofp_match_header *dst, struct ofl_exp *exp) {
     switch (src->type) {
         case (OFPMT_STANDARD): {
             struct ofl_match_standard *m = (struct ofl_match_standard *)src;
-
-            dst->type =          htons( m->header.type);
-            dst->length =        htons( OFPMT_STANDARD_LENGTH);
-            dst->in_port =       htonl( m->in_port);
-            dst->wildcards =     htonl( m->wildcards);
-            memcpy(&(dst->dl_src),      &(m->dl_src),      OFP_ETH_ALEN);
-            memcpy(&(dst->dl_src_mask), &(m->dl_src_mask), OFP_ETH_ALEN);
-            memcpy(&(dst->dl_dst),      &(m->dl_dst),      OFP_ETH_ALEN);
-            memcpy(&(dst->dl_dst_mask), &(m->dl_dst_mask), OFP_ETH_ALEN);
-            dst->dl_vlan =       htons( m->dl_vlan);
-            dst->dl_vlan_pcp =          m->dl_vlan_pcp;
-            memset(dst->pad1, 0x00, 1);
-            dst->dl_type =       htons( m->dl_type);
-            dst->nw_tos =               m->nw_tos;
-            dst->nw_proto =             m->nw_proto;
-            dst->nw_src =               m->nw_src;
-            dst->nw_src_mask =          m->nw_src_mask;
-            dst->nw_dst =               m ->nw_dst;
-            dst->nw_dst_mask =          m->nw_dst_mask;
-            dst->tp_src =        htons( m->tp_src);
-            dst->tp_dst =        htons( m->tp_dst);
-            dst->mpls_label =    htonl( m->mpls_label);
-            dst->mpls_tc =              m->mpls_tc;
-            memset(dst->pad2, 0x00, 3);
-            dst->metadata =      hton64(m->metadata);
-            dst->metadata_mask = hton64(m->metadata_mask);
+            struct ofp_match *match_dst = (struct ofp_match*)dst;
+            
+            match_dst->header.type =          htons( m->header.type);
+            match_dst->header.length =        htons( OFPMT_STANDARD_LENGTH);
+            match_dst->in_port =       htonl( m->in_port);
+            match_dst->wildcards =     htonl( m->wildcards);
+            memcpy(&(match_dst->dl_src),      &(m->dl_src),      OFP_ETH_ALEN);
+            memcpy(&(match_dst->dl_src_mask), &(m->dl_src_mask), OFP_ETH_ALEN);
+            memcpy(&(match_dst->dl_dst),      &(m->dl_dst),      OFP_ETH_ALEN);
+            memcpy(&(match_dst->dl_dst_mask), &(m->dl_dst_mask), OFP_ETH_ALEN);
+            match_dst->dl_vlan =       htons( m->dl_vlan);
+            match_dst->dl_vlan_pcp =          m->dl_vlan_pcp;
+            memset(match_dst->pad1, 0x00, 1);
+            match_dst->dl_type =       htons( m->dl_type);
+            match_dst->nw_tos =               m->nw_tos;
+            match_dst->nw_proto =             m->nw_proto;
+            match_dst->nw_src =               m->nw_src;
+            match_dst->nw_src_mask =          m->nw_src_mask;
+            match_dst->nw_dst =               m ->nw_dst;
+            match_dst->nw_dst_mask =          m->nw_dst_mask;
+            match_dst->tp_src =        htons( m->tp_src);
+            match_dst->tp_dst =        htons( m->tp_dst);
+            match_dst->mpls_label =    htonl( m->mpls_label);
+            match_dst->mpls_tc =              m->mpls_tc;
+            memset(match_dst->pad2, 0x00, 3);
+            match_dst->metadata =      hton64(m->metadata);
+            match_dst->metadata_mask = hton64(m->metadata_mask);
 
             return sizeof(struct ofp_match);
         }

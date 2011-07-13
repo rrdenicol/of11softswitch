@@ -313,7 +313,7 @@ size_t
 ofl_structs_bucket_counter_pack(struct ofl_bucket_counter *src, struct ofp_bucket_counter *dst);
 
 size_t
-ofl_structs_match_pack(struct ofl_match_header *src, struct ofp_match *dst, struct ofl_exp *exp);
+ofl_structs_match_pack(struct ofl_match_header *src, struct ofp_match_header *dst, struct ofl_exp *exp);
 
 
 
@@ -354,7 +354,7 @@ ofl_err
 ofl_structs_bucket_counter_unpack(struct ofp_bucket_counter *src, size_t *len, struct ofl_bucket_counter **dst);
 
 ofl_err
-ofl_structs_match_unpack(struct ofp_match *src, size_t *len, struct ofl_match_header **dst, struct ofl_exp *exp);
+ofl_structs_match_unpack(struct ofp_match_header *src, size_t *len, struct ofl_match_header **dst, struct ofl_exp *exp);
 
 
 

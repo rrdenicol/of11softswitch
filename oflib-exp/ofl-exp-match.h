@@ -50,19 +50,19 @@ struct ofl_ext_match {
 };
 
 
-size_t
-ofl_exp_match_pack(struct ofl_match_header *src, struct ofp_match *dst);
+int
+ofl_exp_match_pack(struct ofl_match_header *src, struct ofp_match_header *dst);
 
 ofl_err
-ofl_exp_match_unpack(struct ofp_match *src, size_t *len, struct ofl_match_header **dst);
+ofl_exp_match_unpack(struct ofp_match_header *src, size_t *len, struct ofl_match_header **dst);
 
 int     
 ofl_exp_match_free(struct ofl_match_header *m);
     
 size_t  
-ofl_exp_match_len(struct ofl_match_header *m);
+ofl_exp_match_length(struct ofl_match_header *m);
 
-char   
-ofl_exp_match_to_str(struct ofl_match_header *m);
+char *  
+ofl_exp_match_to_string(struct ofl_match_header *m);
 
 #endif /* OFL_EXP_MATCH_H */

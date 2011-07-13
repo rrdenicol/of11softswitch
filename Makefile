@@ -162,6 +162,7 @@ lib_libopenflow_a_OBJECTS = $(am_lib_libopenflow_a_OBJECTS) \
 oflib_exp_liboflib_exp_a_AR = $(AR) $(ARFLAGS)
 oflib_exp_liboflib_exp_a_LIBADD =
 am_oflib_exp_liboflib_exp_a_OBJECTS = oflib-exp/ofl-exp.$(OBJEXT) \
+	oflib-exp/ofl-exp-match.$(OBJEXT) \
 	oflib-exp/ofl-exp-nicira.$(OBJEXT) \
 	oflib-exp/ofl-exp-openflow.$(OBJEXT)
 oflib_exp_liboflib_exp_a_OBJECTS =  \
@@ -618,6 +619,8 @@ oflib_liboflib_a_SOURCES = \
 oflib_exp_liboflib_exp_a_SOURCES = \
 	oflib-exp/ofl-exp.c \
 	oflib-exp/ofl-exp.h \
+	oflib-exp/ofl-exp-match.c \
+	oflib-exp/ofl-exp-match.h \
 	oflib-exp/ofl-exp-nicira.c \
 	oflib-exp/ofl-exp-nicira.h \
 	oflib-exp/ofl-exp-openflow.c \
@@ -873,6 +876,8 @@ oflib-exp/$(DEPDIR)/$(am__dirstamp):
 	@$(MKDIR_P) oflib-exp/$(DEPDIR)
 	@: > oflib-exp/$(DEPDIR)/$(am__dirstamp)
 oflib-exp/ofl-exp.$(OBJEXT): oflib-exp/$(am__dirstamp) \
+	oflib-exp/$(DEPDIR)/$(am__dirstamp)
+oflib-exp/ofl-exp-match.$(OBJEXT): oflib-exp/$(am__dirstamp) \
 	oflib-exp/$(DEPDIR)/$(am__dirstamp)
 oflib-exp/ofl-exp-nicira.$(OBJEXT): oflib-exp/$(am__dirstamp) \
 	oflib-exp/$(DEPDIR)/$(am__dirstamp)
@@ -1272,6 +1277,7 @@ mostlyclean-compile:
 	-rm -f lib/vconn.$(OBJEXT)
 	-rm -f lib/vlog-socket.$(OBJEXT)
 	-rm -f lib/vlog.$(OBJEXT)
+	-rm -f oflib-exp/ofl-exp-match.$(OBJEXT)
 	-rm -f oflib-exp/ofl-exp-nicira.$(OBJEXT)
 	-rm -f oflib-exp/ofl-exp-openflow.$(OBJEXT)
 	-rm -f oflib-exp/ofl-exp.$(OBJEXT)
@@ -1382,6 +1388,7 @@ include lib/$(DEPDIR)/vconn-unix.Po
 include lib/$(DEPDIR)/vconn.Po
 include lib/$(DEPDIR)/vlog-socket.Po
 include lib/$(DEPDIR)/vlog.Po
+include oflib-exp/$(DEPDIR)/ofl-exp-match.Po
 include oflib-exp/$(DEPDIR)/ofl-exp-nicira.Po
 include oflib-exp/$(DEPDIR)/ofl-exp-openflow.Po
 include oflib-exp/$(DEPDIR)/ofl-exp.Po

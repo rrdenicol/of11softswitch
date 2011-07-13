@@ -125,7 +125,8 @@ static struct ofl_exp_match dp_exp_match =
         {.pack      = ofl_exp_match_pack,
          .unpack    = ofl_exp_match_unpack,
          .free      = ofl_exp_match_free,
-         .to_string = ofl_exp_match_to_str};
+         .ofp_len   = ofl_exp_match_length,
+         .to_string = ofl_exp_match_to_string};
 
 static struct ofl_exp dp_exp =
         {.act   = NULL,

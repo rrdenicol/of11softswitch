@@ -522,7 +522,7 @@ struct ext_match
     uint16_t type;                   /* One of OFPMT_* */
     uint16_t length;                 /* Length of ofp_match */
     uint32_t wildcards;              /* Wildcard fields. */
-    uint8_t pad1[4];                 /*Allign to 64 bits */
+    uint8_t pad[4];                 /*Allign to 64 bits */
     struct flex_array *match_fields; /* Match fields */   
 
 } __attribute__ ((packed));
