@@ -40,8 +40,11 @@
 #include "oflib/ofl-messages.h"
 #include "oflib-exp/ofl-exp-openflow.h"
 #include "oflib-exp/ofl-exp-nicira.h"
+#include "oflib-exp/ofl-exp-ext-messages.h"
+#include "oflib-exp/ofl-exp-match.h"
 #include "openflow/openflow.h"
 #include "openflow/openflow-ext.h"
+#include "openflow/match-ext.h"
 #include "openflow/nicira-ext.h"
 #include "vlog.h"
 
@@ -72,7 +75,6 @@ ofl_err
 dp_exp_message(struct datapath *dp,
                                 struct ofl_msg_experimenter *msg,
                                const struct sender *sender) {
-
     switch (msg->experimenter_id) {
         case (OPENFLOW_VENDOR_ID): {
             struct ofl_exp_openflow_msg_header *exp = (struct ofl_exp_openflow_msg_header *)msg;
@@ -103,8 +105,27 @@ dp_exp_message(struct datapath *dp,
                 }
             }
         }
+	    case (EXTENDED_MATCH_ID):{
+	        struct ofl_ext_msg_header *exp = (struct ofl_ext_msg_header *)msg;
+	        
+	        switch (exp->type){
+	            case (EXT_FLOW_MOD): {
+	                struct ofl_ext_flow_mod *fm =  (struct ofl_ext_flow_mod *) exp;
+	                pipeline_handle_ext_flow_mod(dp->pipeline, fm, sender);
+                    /*struct ofl_ext_match *match = (struct ofl_ext_match *) fm->match;
+                    struct ofl_instruction_header *inst = (struct ofl_instruction_header *) *fm->instructions;
+                    uint8_t *x = match->match_fields.entries;
+                    uint32_t *p = x + 10;
+                    printf("MATCH %x\n", *p); */
+	                /*Return the Extended Flow Mod handler */
+	                return 0;
+	            }
+	        
+	        }
+	   }
 
         default: {
+	     VLOG_WARN_RL(LOG_MODULE, &rl, "Trying to handle unknown experimenter id (%u).", msg->experimenter_id);
             return ofl_error(OFPET_BAD_REQUEST, OFPBRC_BAD_EXPERIMENTER);
         }
     }

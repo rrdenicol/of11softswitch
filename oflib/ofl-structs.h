@@ -161,6 +161,7 @@ struct ofl_table_stats {
 
 struct ofl_match_header {
     uint16_t   type;             /* One of OFPMT_* */
+    uint16_t   length;
 };
 
 struct ofl_match_standard {

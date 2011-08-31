@@ -265,7 +265,6 @@ remote_run(struct datapath *dp, struct remote *r)
                 struct ofl_msg_header *msg;
 
                 struct sender sender = {.remote = r};
-
                 error = ofl_msg_unpack(buffer->data, buffer->size, &msg, &(sender.xid), dp->exp);
 
                 if (!error) {
@@ -277,6 +276,7 @@ remote_run(struct datapath *dp, struct remote *r)
                 }
 
                 if (error) {
+		   printf("Sending error\n");
                     struct ofl_msg_error err =
                             {{.type = OFPT_ERROR},
                              .type = ofl_error_type(error),

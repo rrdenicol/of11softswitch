@@ -511,7 +511,6 @@ ofl_msg_to_string(struct ofl_msg_header *msg, struct ofl_exp *exp) {
     char *str;
     size_t str_size;
     FILE *stream = open_memstream(&str, &str_size);
-
     ofl_msg_print(stream, msg, exp);
     fclose(stream);
     return str;
@@ -521,6 +520,7 @@ void
 ofl_msg_print(FILE *stream, struct ofl_msg_header *msg, struct ofl_exp *exp) {
     ofl_message_type_print(stream, msg->type);
 
+    
     switch (msg->type) {
         case OFPT_HELLO: { return; }
         case OFPT_ERROR: { ofl_msg_print_error((struct ofl_msg_error *)msg, stream); return; }

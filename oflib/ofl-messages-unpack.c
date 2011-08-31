@@ -420,7 +420,6 @@ ofl_msg_unpack_flow_mod(struct ofp_header *src, size_t *len, struct ofl_msg_head
     dm->out_port =     ntohl( sm->out_port);
     dm->out_group =    ntohl( sm->out_group);
     dm->flags =        ntohs( sm->flags);
-
     error = ofl_structs_match_unpack(&(sm->match.header), len, &(dm->match), exp);
 
     if (error) {
@@ -1188,6 +1187,8 @@ ofl_msg_unpack(uint8_t *buf, size_t buf_len, struct ofl_msg_header **msg, uint32
     size_t len = buf_len;
     ofl_err error = 0;
 
+    
+
     if (len < sizeof(struct ofp_header)) {
         OFL_LOG_WARN(LOG_MODULE, "Received message is shorter than ofp_header.");
         if (xid != NULL) {
@@ -1211,7 +1212,7 @@ ofl_msg_unpack(uint8_t *buf, size_t buf_len, struct ofl_msg_header **msg, uint32
         OFL_LOG_WARN(LOG_MODULE, "Received message length does not match the length field.");
         return ofl_error(OFPET_BAD_REQUEST, OFPBRC_BAD_LEN);
     }
-
+    
     switch (oh->type) {
         case OFPT_HELLO:
             error = ofl_msg_unpack_empty(oh, &len, msg);
@@ -1228,7 +1229,7 @@ ofl_msg_unpack(uint8_t *buf, size_t buf_len, struct ofl_msg_header **msg, uint32
                 OFL_LOG_WARN(LOG_MODULE, "Received EXPERIMENTER message, but no callback was given.");
                 error = ofl_error(OFPET_BAD_REQUEST, OFPBRC_BAD_EXPERIMENTER);
             } else {
-                error = exp->msg->unpack(oh, &len, (struct ofl_msg_experimenter **)msg);
+                    error = exp->msg->unpack(oh, &len, (struct ofl_msg_experimenter **)msg);
             }
             break;
 
@@ -1311,7 +1312,7 @@ ofl_msg_unpack(uint8_t *buf, size_t buf_len, struct ofl_msg_header **msg, uint32
             OFL_LOG_DBG(LOG_MODULE, "\n%s\n", str);
             free(str);
         }
-        return error;
+      
     }
 
     /* Note: len must be decreased by the amount of buffer used by the
@@ -1325,10 +1326,12 @@ ofl_msg_unpack(uint8_t *buf, size_t buf_len, struct ofl_msg_header **msg, uint32
             OFL_LOG_DBG(LOG_MODULE, "Error happened after processing %zu bytes of packet.", ntohs(oh->length) - len);
             OFL_LOG_DBG(LOG_MODULE, "\n%s\n", str);
             free(str);
+           
         }
     }
-
-    (*msg)->type = (enum ofp_type)oh->type;
+     
+   (*msg)->type = (enum ofp_type) oh->type;
+    
 
     return 0;
 }

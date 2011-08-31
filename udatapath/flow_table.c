@@ -114,6 +114,52 @@ flow_table_add(struct flow_table *table, struct ofl_msg_flow_mod *mod, bool chec
     return 0;
 }
 
+/* Handles flow mod messages with ADD command. */
+static ofl_err
+flow_table_ext_add(struct flow_table *table, struct ofl_ext_flow_mod *mod, bool check_overlap, bool *match_kept, bool *insts_kept) {
+    // Note: new entries will be placed behind those with equal priority
+    struct flow_entry *entry, *new_entry;
+
+    LIST_FOR_EACH (entry, struct flow_entry, match_node, &table->match_entries) {
+        if (check_overlap && flow_entry_overlaps(entry, mod)) {
+            return ofl_error(OFPET_FLOW_MOD_FAILED, OFPFMFC_OVERLAP);
+        }
+
+        /* if the entry equals, replace the old one */
+        if (flow_entry_matches(entry, mod, true)) {
+            new_entry = flow_entry_create(table->dp, table, mod);
+            *match_kept = true;
+            *insts_kept = true;
+
+            /* NOTE: no flow removed message should be generated according to spec. */
+            list_replace(&new_entry->match_node, &entry->match_node);
+            list_remove(&entry->hard_node);
+            list_remove(&entry->idle_node);
+            flow_entry_destroy(entry);
+            add_to_timeout_lists(table, new_entry);
+            return 0;
+        }
+
+        if (mod->priority < entry->stats->priority) {
+            break;
+        }
+    }
+
+    if (table->stats->active_count == FLOW_TABLE_MAX_ENTRIES) {
+        return ofl_error(OFPET_FLOW_MOD_FAILED, OFPFMFC_TABLE_FULL);
+    }
+    table->stats->active_count++;
+
+    new_entry = flow_entry_create(table->dp, table, mod);
+    *match_kept = true;
+    *insts_kept = true;
+
+    list_insert(&entry->match_node, &new_entry->match_node);
+    add_to_timeout_lists(table, new_entry);
+
+    return 0;
+}
+
 /* Handles flow mod messages with MODIFY command. */
 static ofl_err
 flow_table_modify(struct flow_table *table, struct ofl_msg_flow_mod *mod, bool strict, bool *match_kept, bool *insts_kept) {
@@ -154,28 +200,59 @@ flow_table_delete(struct flow_table *table, struct ofl_msg_flow_mod *mod, bool s
 
 
 ofl_err
-flow_table_flow_mod(struct flow_table *table, struct ofl_msg_flow_mod *mod, bool *match_kept, bool *insts_kept) {
-    switch (mod->command) {
-        case (OFPFC_ADD): {
-            bool overlap = ((mod->flags & OFPFF_CHECK_OVERLAP) != 0);
-            return flow_table_add(table, mod, overlap, match_kept, insts_kept);
-        }
-        case (OFPFC_MODIFY): {
-            return flow_table_modify(table, mod, false, match_kept, insts_kept);
-        }
-        case (OFPFC_MODIFY_STRICT): {
-            return flow_table_modify(table, mod, true, match_kept, insts_kept);
-        }
-        case (OFPFC_DELETE): {
-            return flow_table_delete(table, mod, false);
-        }
-        case (OFPFC_DELETE_STRICT): {
-            return flow_table_delete(table, mod, true);
-        }
-        default: {
-            return ofl_error(OFPET_FLOW_MOD_FAILED, OFPFMFC_BAD_COMMAND);
+flow_table_flow_mod(struct flow_table *table, struct ofl_msg_header *mod, bool *match_kept, bool *insts_kept) {
+    
+    if(mod->type == OFPT_FLOW_MOD){
+        struct ofl_msg_flow_mod *fm = (struct ofl_msg_flow_mod *)mod;
+        switch (fm->command) {
+            case (OFPFC_ADD): {
+                bool overlap = ((fm->flags & OFPFF_CHECK_OVERLAP) != 0);
+                return flow_table_add(table, fm, overlap, match_kept, insts_kept);
+            }
+            case (OFPFC_MODIFY): {
+                return flow_table_modify(table, fm, false, match_kept, insts_kept);
+            }
+            case (OFPFC_MODIFY_STRICT): {
+                return flow_table_modify(table, fm, true, match_kept, insts_kept);
+            }
+            case (OFPFC_DELETE): {
+                return flow_table_delete(table, fm, false);
+            }
+            case (OFPFC_DELETE_STRICT): {
+                return flow_table_delete(table, fm, true);
+            }
+            default: {
+                return ofl_error(OFPET_FLOW_MOD_FAILED, OFPFMFC_BAD_COMMAND);
+            }
         }
     }
+    else if(mod->type == OFPT_EXPERIMENTER){
+        struct ofl_ext_flow_mod *fm = (struct ofl_ext_flow_mod *)mod;
+        switch (fm->command) {
+            case (OFPFC_ADD): {
+                bool overlap = ((fm->flags & OFPFF_CHECK_OVERLAP) != 0);
+                return flow_table_add(table, fm, overlap, match_kept, insts_kept);
+            }
+            case (OFPFC_MODIFY): {
+                return flow_table_modify(table, fm, false, match_kept, insts_kept);
+            }
+            case (OFPFC_MODIFY_STRICT): {
+                return flow_table_modify(table, fm, true, match_kept, insts_kept);
+            }
+            case (OFPFC_DELETE): {
+                return flow_table_delete(table, fm, false);
+            }
+            case (OFPFC_DELETE_STRICT): {
+                return flow_table_delete(table, fm, true);
+            }
+            default: {
+                return ofl_error(OFPET_FLOW_MOD_FAILED, OFPFMFC_BAD_COMMAND);
+            }
+        }
+    }
+    
+    return 0;
+   
 }
 
 
@@ -204,6 +281,13 @@ flow_table_lookup(struct flow_table *table, struct packet *pkt) {
                     return entry;
                 }
                 break;
+            }
+            case (EXT_MATCH): {
+            
+            
+            
+            
+            
             }
             default: {
                 VLOG_WARN_RL(LOG_MODULE, &rl, "Trying to process flow entry with unknown match type (%u).", m->type);

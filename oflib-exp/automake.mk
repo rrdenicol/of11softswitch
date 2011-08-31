@@ -3,6 +3,10 @@ noinst_LIBRARIES += oflib-exp/liboflib_exp.a
 oflib_exp_liboflib_exp_a_SOURCES = \
 	oflib-exp/ofl-exp.c \
 	oflib-exp/ofl-exp.h \
+	oflib-exp/ofl-exp-ext-messages.c \
+	oflib-exp/ofl-exp-ext-messages-unpack.c \
+	oflib-exp/ofl-exp-ext-messages-pack.c \
+	oflib-exp/ofl-exp-ext-messages.h \
 	oflib-exp/ofl-exp-match.c \
 	oflib-exp/ofl-exp-match.h \
 	oflib-exp/ofl-exp-nicira.c \

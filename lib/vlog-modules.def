@@ -28,6 +28,7 @@ VLOG_MODULE(vconn_tcp)
 VLOG_MODULE(vconn_unix)
 VLOG_MODULE(vlog)
 VLOG_MODULE(vlog_socket)
+VLOG_MODULE(nx_match)
 
 #include "oflib/vlog-modules.def"
 #include "oflib-exp/vlog-modules.def"

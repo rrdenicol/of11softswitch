@@ -53,7 +53,7 @@ ofl_structs_instructions_unpack(struct ofp_instruction *src, size_t *len, struct
         OFL_LOG_WARN(LOG_MODULE, "Received instruction is too short (%zu).", *len);
         return ofl_error(OFPET_BAD_ACTION, OFPBAC_BAD_LEN);
     }
-
+    
     if (*len < ntohs(src->len)) {
         OFL_LOG_WARN(LOG_MODULE, "Received instruction has invalid length (set to %u, but only %zu received).", ntohs(src->len), *len);
         return ofl_error(OFPET_BAD_ACTION, OFPBAC_BAD_LEN);

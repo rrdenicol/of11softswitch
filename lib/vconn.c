@@ -51,6 +51,7 @@
 #include "oflib/ofl.h"
 #include "oflib/ofl-messages.h"
 #include "oflib-exp/ofl-exp.h"
+#include "oflib-exp/ofl-exp-match.h"
 
 #define LOG_MODULE VLM_vconn
 #include "vlog.h"
@@ -74,10 +75,18 @@ static struct ofl_exp_msg ofl_exp_msg =
          .free      = ofl_exp_msg_free,
          .to_string = ofl_exp_msg_to_string};
 
+static struct ofl_exp_match ofl_exp_match = 
+         {.pack = ofl_exp_match_pack,
+         .unpack    = ofl_exp_match_unpack,
+         .free      = ofl_exp_match_free,
+         .ofp_len   = ofl_exp_match_length,
+         .to_string = ofl_exp_match_to_string};
+
+
 static struct ofl_exp ofl_exp =
         {.act   = NULL,
          .inst  = NULL,
-         .match = NULL,
+         .match = &ofl_exp_match,
          .stats = NULL,
          .msg   = &ofl_exp_msg};
 
@@ -374,7 +383,7 @@ vcs_recv_hello(struct vconn *vconn)
         } else {
             struct ofl_msg_header *msg;
             char *str;
-
+          
             if (!ofl_msg_unpack(b->data, b->size, &msg, NULL/*xid*/, &ofl_exp)) {
                 str = ofl_msg_to_string(msg, &ofl_exp);
                 ofl_msg_free(msg, &ofl_exp);
@@ -458,10 +467,10 @@ vconn_connect(struct vconn *vconn)
         case VCS_CONNECTED:
             return 0;
 
-        case VCS_SEND_ERROR:
+        case VCS_SEND_ERROR:{
             vcs_send_error(vconn);
             break;
-
+        }
         case VCS_DISCONNECTED:
             return vconn->error;
 
@@ -484,9 +493,10 @@ vconn_connect(struct vconn *vconn)
 int
 vconn_recv(struct vconn *vconn, struct ofpbuf **msgp)
 {
+  
     int retval = vconn_connect(vconn);
     if (!retval) {
-        retval = do_recv(vconn, msgp);
+         retval = do_recv(vconn, msgp);   
     }
     return retval;
 }
@@ -495,20 +505,19 @@ static int
 do_recv(struct vconn *vconn, struct ofpbuf **msgp)
 {
     int retval;
-
-again:
+again:    
     retval = (vconn->class->recv)(vconn, msgp);
     if (!retval) {
         struct ofp_header *oh;
-
         if (VLOG_IS_DBG_ENABLED(LOG_MODULE)) {
             struct ofl_msg_header *msg;
             char *str;
-
+            
             if (!ofl_msg_unpack((*msgp)->data, (*msgp)->size, &msg, NULL/*xid*/, &ofl_exp)) {
                 str = ofl_msg_to_string(msg, &ofl_exp);
+                
                 ofl_msg_free(msg, &ofl_exp);
-            } else {
+            } else {         
                 struct ds string = DS_EMPTY_INITIALIZER;
                 ds_put_cstr(&string, "\n");
                 ds_put_hex_dump(&string, (*msgp)->data, MIN((*msgp)->size, 1024), 0, false);
@@ -518,7 +527,7 @@ again:
 
             free(str);
         }
-
+        
         oh = ofpbuf_at_assert(*msgp, 0, sizeof *oh);
         if (oh->version != vconn->version
             && oh->type != OFPT_HELLO
@@ -527,6 +536,7 @@ again:
             && oh->type != OFPT_ECHO_REPLY
             && oh->type != OFPT_EXPERIMENTER)
         {
+            
             if (vconn->version < 0) {
                 if (oh->type == OFPT_PACKET_IN
                     || oh->type == OFPT_FLOW_REMOVED
@@ -585,16 +595,16 @@ static int
 do_send(struct vconn *vconn, struct ofpbuf *buf)
 {
     int retval;
-
     assert(buf->size >= sizeof(struct ofp_header));
     assert(((struct ofp_header *) buf->data)->length == htons(buf->size));
     if (!VLOG_IS_DBG_ENABLED(LOG_MODULE)) {
         retval = (vconn->class->send)(vconn, buf);
     } else {
+        
         struct ofl_msg_header *msg;
         char *str;
 
-        if (!ofl_msg_unpack(buf->data, buf->size, &msg, NULL/*xid*/, &ofl_exp)) {
+        if (!ofl_msg_unpack(buf->data, buf->size, &msg, NULL/*xid*/, &ofl_exp)){
             str = ofl_msg_to_string(msg, &ofl_exp);
             ofl_msg_free(msg, &ofl_exp);
         } else {
@@ -603,8 +613,8 @@ do_send(struct vconn *vconn, struct ofpbuf *buf)
             ds_put_hex_dump(&string, buf->data, MIN(buf->size, 1024), 0, false);
             str = ds_cstr(&string);
         }
-
         retval = (vconn->class->send)(vconn, buf);
+
         if (retval != EAGAIN) {
             VLOG_DBG_RL(LOG_MODULE, &rl, "%s: sent (%s): %s",
                         vconn->name, strerror(retval), str);

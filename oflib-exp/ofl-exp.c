@@ -36,15 +36,17 @@
 #include "ofl-exp.h"
 #include "ofl-exp-nicira.h"
 #include "ofl-exp-openflow.h"
+#include "ofl-exp-ext-messages.h"
 #include "../oflib/ofl-messages.h"
 #include "../oflib/ofl-log.h"
 #include "openflow/openflow.h"
 #include "openflow/nicira-ext.h"
 #include "openflow/openflow-ext.h"
+#include "openflow/match-ext.h"
+
 
 #define LOG_MODULE ofl_exp
 OFL_LOG_INIT(LOG_MODULE)
-
 
 
 int
@@ -56,11 +58,16 @@ ofl_exp_msg_pack(struct ofl_msg_experimenter *msg, uint8_t **buf, size_t *buf_le
         case (NX_VENDOR_ID): {
             return ofl_exp_nicira_msg_pack(msg, buf, buf_len);
         }
+        case (EXTENDED_MATCH_ID):{
+            return ofl_ext_message_pack(msg,buf,buf_len);
+
+        }
         default: {
             OFL_LOG_WARN(LOG_MODULE, "Trying to pack unknown EXPERIMENTER message (%u).", msg->experimenter_id);
             return -1;
         }
     }
+    return -1;
 }
 
 ofl_err
@@ -72,7 +79,7 @@ ofl_exp_msg_unpack(struct ofp_header *oh, size_t *len, struct ofl_msg_experiment
         return ofl_error(OFPET_BAD_REQUEST, OFPBRC_BAD_LEN);
     }
 
-    exp = (struct ofp_experimenter_header *)oh;
+    exp = (struct ofp_experimenter_header *) (oh);
 
     switch (htonl(exp->experimenter)) {
         case (OPENFLOW_VENDOR_ID): {
@@ -81,11 +88,17 @@ ofl_exp_msg_unpack(struct ofp_header *oh, size_t *len, struct ofl_msg_experiment
         case (NX_VENDOR_ID): {
             return ofl_exp_nicira_msg_unpack(oh, len, msg);
         }
+        case (EXTENDED_MATCH_ID):{ 
+            return ofl_ext_message_unpack(oh, len, msg);     
+         }
         default: {
+                       
+            
             OFL_LOG_WARN(LOG_MODULE, "Trying to unpack unknown EXPERIMENTER message (%u).", htonl(exp->experimenter));
             return ofl_error(OFPET_BAD_REQUEST, OFPBRC_BAD_EXPERIMENTER);
         }
     }
+    return 0;
 }
 
 int
@@ -96,6 +109,12 @@ ofl_exp_msg_free(struct ofl_msg_experimenter *msg) {
         }
         case (NX_VENDOR_ID): {
             return ofl_exp_nicira_msg_free(msg);
+            
+        }
+        case (EXTENDED_MATCH_ID):{
+        
+            return ofl_ext_msg_free(msg);
+        
         }
         default: {
             OFL_LOG_WARN(LOG_MODULE, "Trying to free unknown EXPERIMENTER message (%u).", msg->experimenter_id);
@@ -105,14 +124,21 @@ ofl_exp_msg_free(struct ofl_msg_experimenter *msg) {
     }
 }
 
+
+
 char *
 ofl_exp_msg_to_string(struct ofl_msg_experimenter *msg) {
+    
+
     switch (msg->experimenter_id) {
         case (OPENFLOW_VENDOR_ID): {
             return ofl_exp_openflow_msg_to_string(msg);
         }
         case (NX_VENDOR_ID): {
             return ofl_exp_nicira_msg_to_string(msg);
+        }
+        case (EXTENDED_MATCH_ID):{
+           return ofl_ext_message_to_string(msg); 
         }
         default: {
             char *str;

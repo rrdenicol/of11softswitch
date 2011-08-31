@@ -38,6 +38,7 @@
 #include "flow_table.h"
 #include "oflib/ofl.h"
 #include "oflib/ofl-messages.h"
+#include "oflib-exp/ofl-exp-ext-messages.h"
 
 /* Number of tables in the pipeline */
 #define PIPELINE_TABLES 255
@@ -65,16 +66,23 @@ void
 pipeline_process_packet(struct pipeline *pl, struct packet *pkt);
 
 
+/* Handles an extended match flow_mod message. */
+ofl_err
+pipeline_handle_ext_flow_mod(struct pipeline *pl, struct ofl_ext_flow_mod *msg,
+                         const struct sender *sender);
+
 /* Handles a flow_mod message. */
 ofl_err
 pipeline_handle_flow_mod(struct pipeline *pl, struct ofl_msg_flow_mod *msg,
                          const struct sender *sender);
+
 
 /* Handles a table_mod message. */
 ofl_err
 pipeline_handle_table_mod(struct pipeline *pl,
                           struct ofl_msg_table_mod *msg,
                           const struct sender *sender);
+
 
 /* Handles a flow stats request. */
 ofl_err

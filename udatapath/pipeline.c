@@ -99,7 +99,6 @@ send_packet_to_controller(struct pipeline *pl, struct packet *pkt, uint8_t table
 void
 pipeline_process_packet(struct pipeline *pl, struct packet *pkt) {
     struct flow_table *table, *next_table;
-    bool matched;
 
     if (VLOG_IS_DBG_ENABLED(LOG_MODULE)) {
         char *pkt_str = packet_to_string(pkt);
@@ -121,10 +120,7 @@ pipeline_process_packet(struct pipeline *pl, struct packet *pkt) {
     }
 
     next_table = pl->tables[0];
-    matched = false;
 
-    /* TODO Zoltan: works correctly, but perhaps not the best way to do this
-       sketching a state machine would surely help */
     while (next_table != NULL) {
         struct flow_entry *entry;
 
@@ -143,9 +139,8 @@ pipeline_process_packet(struct pipeline *pl, struct packet *pkt) {
                 free(m);
             }
 
-            matched = true;
-
             execute_entry(pl, entry, &next_table, pkt);
+
             if (next_table == NULL) {
                 action_set_execute(pkt->action_set, pkt);
                 packet_destroy(pkt);
@@ -153,24 +148,84 @@ pipeline_process_packet(struct pipeline *pl, struct packet *pkt) {
             }
 
         } else {
-            if (matched) {
-                VLOG_DBG_RL(LOG_MODULE, &rl, "no matching entry found. executing action set.");
-                action_set_execute(pkt->action_set, pkt);
-                packet_destroy(pkt);
-                return;
-            } else {
-                VLOG_DBG_RL(LOG_MODULE, &rl, "no matching entry found. executing table conf.");
-                execute_table(pl, table, &next_table, pkt);
-                if (next_table == NULL) {
-                    packet_destroy(pkt);
-                    return;
-                }
-            }
+			VLOG_DBG_RL(LOG_MODULE, &rl, "no matching entry found. executing table conf.");
+			execute_table(pl, table, &next_table, pkt);
+			if (next_table == NULL) {
+				packet_destroy(pkt);
+				return;
+			}
         }
     }
     VLOG_WARN_RL(LOG_MODULE, &rl, "Reached outside of pipeline processing cycle.");
 }
 
+ofl_err
+pipeline_handle_ext_flow_mod(struct pipeline *pl, struct ofl_ext_flow_mod *msg,
+                         const struct sender *sender UNUSED){
+     
+
+    ofl_err error;
+    size_t i;
+
+    bool match_kept = false;
+    bool insts_kept = false;
+
+    // Validate actions in flow_mod
+    for (i=0; i< msg->instructions_num; i++) {
+        if (msg->instructions[i]->type == OFPIT_APPLY_ACTIONS ||
+            msg->instructions[i]->type == OFPIT_WRITE_ACTIONS) {
+            struct ofl_instruction_actions *ia = (struct ofl_instruction_actions *)msg->instructions[i];
+
+            error = dp_actions_validate(pl->dp, ia->actions_num, ia->actions);
+            if (error) {
+                return error;
+            }
+        }
+    }
+ 
+    if (msg->table_id == 0xff) {
+        if (msg->command == OFPFC_DELETE || msg->command == OFPFC_DELETE_STRICT) {
+            size_t i;
+
+            error = 0;
+            for (i=0; i < PIPELINE_TABLES; i++) {
+                error = flow_table_flow_mod(pl->tables[i], &msg->header.header.header, &match_kept, &insts_kept);
+                if (error) {
+                    break;
+                }
+            }
+            if (error) {
+                return error;
+            } else {
+                ofl_ext_free_flow_mod(msg, !match_kept, !insts_kept, NULL);
+                return 0;
+            }
+        } else {
+            return ofl_error(OFPET_FLOW_MOD_FAILED, OFPFMFC_BAD_TABLE_ID);
+        }
+    } else {
+        error = flow_table_flow_mod(pl->tables[msg->table_id], &msg->header, &match_kept, &insts_kept);
+        if (error) {
+            return error;
+        }
+        if ((msg->command == OFPFC_ADD || msg->command == OFPFC_MODIFY || msg->command == OFPFC_MODIFY_STRICT) &&
+                            msg->buffer_id != NO_BUFFER) {
+            /* run buffered message through pipeline */
+            struct packet *pkt;
+
+            pkt = dp_buffers_retrieve(pl->dp->buffers, msg->buffer_id);
+
+            if (pkt != NULL) {
+                pipeline_process_packet(pl, pkt);
+            } else {
+                VLOG_WARN_RL(LOG_MODULE, &rl, "The buffer flow_mod referred to was empty (%u).", msg->buffer_id);
+            }
+        }
+
+        ofl_msg_free_flow_mod(msg, !match_kept, !insts_kept, pl->dp->exp);
+        return 0;
+    }          
+}
 
 ofl_err
 pipeline_handle_flow_mod(struct pipeline *pl, struct ofl_msg_flow_mod *msg,
@@ -203,7 +258,7 @@ pipeline_handle_flow_mod(struct pipeline *pl, struct ofl_msg_flow_mod *msg,
 
             error = 0;
             for (i=0; i < PIPELINE_TABLES; i++) {
-                error = flow_table_flow_mod(pl->tables[i], msg, &match_kept, &insts_kept);
+                error = flow_table_flow_mod(pl->tables[i], &msg->header, &match_kept, &insts_kept);
                 if (error) {
                     break;
                 }
@@ -218,7 +273,7 @@ pipeline_handle_flow_mod(struct pipeline *pl, struct ofl_msg_flow_mod *msg,
             return ofl_error(OFPET_FLOW_MOD_FAILED, OFPFMFC_BAD_TABLE_ID);
         }
     } else {
-        error = flow_table_flow_mod(pl->tables[msg->table_id], msg, &match_kept, &insts_kept);
+        error = flow_table_flow_mod(pl->tables[msg->table_id], &msg->header, &match_kept, &insts_kept);
         if (error) {
             return error;
         }

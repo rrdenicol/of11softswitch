@@ -39,4 +39,5 @@
 uint32_t hash_words(const uint32_t *, size_t n_word, uint32_t basis);
 uint32_t hash_bytes(const void *, size_t n_bytes, uint32_t basis);
 
+
 #endif /* hash.h */

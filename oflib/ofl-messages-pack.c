@@ -852,11 +852,10 @@ ofl_msg_pack(struct ofl_msg_header *msg, uint32_t xid, uint8_t **buf, size_t *bu
     }
 
     oh = (struct ofp_header *)(*buf);
-
-    oh->version =        OFP_VERSION;
-    oh->type    =        msg->type;
+    
+    oh->version =  OFP_VERSION;
+    oh->type    =  msg->type;
     oh->length  = htons(*buf_len);
     oh->xid     = htonl(xid);
-
     return 0;
 }

@@ -3,6 +3,9 @@ noinst_LIBRARIES += lib/libopenflow.a
 lib_libopenflow_a_SOURCES = \
 	lib/backtrace.c \
 	lib/backtrace.h \
+	lib/bj_hash.c \
+	lib/bj_hash.h \
+	lib/byte-order.h \
 	lib/command-line.c \
 	lib/command-line.h \
 	lib/compiler.h \
@@ -23,6 +26,7 @@ lib_libopenflow_a_SOURCES = \
 	lib/fatal-signal.h \
 	lib/fault.c \
 	lib/fault.h \
+	lib/flex-array.c \
 	lib/flex-array.h \
 	lib/flow.c \
 	lib/flow.h \
@@ -34,6 +38,10 @@ lib_libopenflow_a_SOURCES = \
 	lib/leak-checker.h \
 	lib/list.c \
 	lib/list.h \
+	lib/list_t.c \
+	lib/list_t.h \
+	lib/nx-match.c \
+	lib/nx-match.h \
 	lib/mac-learning.c \
 	lib/mac-learning.h \
 	lib/netdev.c \
@@ -75,6 +83,7 @@ lib_libopenflow_a_SOURCES = \
 	lib/type-props.h \
 	lib/util.c \
 	lib/util.h \
+	lib/unaligned.h \
 	lib/vconn-provider.h \
 	lib/vconn-ssl.h \
 	lib/vconn-stream.c \
@@ -105,6 +114,10 @@ lib_libopenflow_a_LIBADD = oflib/ofl-actions.o \
                            oflib/ofl-print.o \
                            oflib-exp/ofl-exp.o \
                            oflib-exp/ofl-exp-nicira.o \
+			   oflib-exp/ofl-exp-match.o \
+			   oflib-exp/ofl-exp-ext-messages.o \
+			   oflib-exp/ofl-exp-ext-messages-pack.o \
+			   oflib-exp/ofl-exp-ext-messages-unpack.o \
                            oflib-exp/ofl-exp-openflow.o
 
 
