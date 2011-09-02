@@ -32,8 +32,8 @@
 #ifndef MATCH_EXT_H
 #define MATCH_EXT_H 1
 
-#include "openflow/openflow.h"
-#include "lib/flex-array.h"
+#include "openflow.h"
+#include "../../lib/flex-array.h"
 
 /* Flexible flow specifications (aka NXM = Nicira Extended Match).
  *
@@ -228,11 +228,20 @@
     NXM_HEADER__(VENDOR, FIELD, 0, LENGTH)
 #define NXM_HEADER_W(VENDOR, FIELD, LENGTH) \
     NXM_HEADER__(VENDOR, FIELD, 1, (LENGTH) * 2)
+
+#define NXM_HEADER_VL(VENDOR,FIELD) \
+    NXM_HEADER__(VENDOR,FIELD,0,0)
+
+#define NXM_HEADER_VL_W(VENDOR,FIELD) \
+   NXM_HEADER__(VENDOR,FIELD,1,0)
+   
 #define NXM_VENDOR(HEADER) ((HEADER) >> 16)
 #define NXM_FIELD(HEADER) (((HEADER) >> 9) & 0x7f)
 #define NXM_TYPE(HEADER) (((HEADER) >> 9) & 0x7fffff)
 #define NXM_HASMASK(HEADER) (((HEADER) >> 8) & 1)
 #define NXM_LENGTH(HEADER) ((HEADER) & 0xff)
+#define VENDOR_FROM_TYPE(TYPE) ((TYPE) >> 7)
+#define FIELD_FROM_TYPE(TYPE)  ((TYPE) & 0x7f)
 
 #define NXM_MAKE_WILD_HEADER(HEADER) \
         NXM_HEADER_W(NXM_VENDOR(HEADER), NXM_FIELD(HEADER), NXM_LENGTH(HEADER))
@@ -245,288 +254,110 @@
  *
  * Prereqs: None.
  *
- * Format: 16-bit integer in network byte order.
- *
- * Masking: Not maskable. */
-#define NXM_OF_IN_PORT    NXM_HEADER  (0x0000,  0, 4)
+ * Format: 16-bit integer. */
+#define    TLV_EXT_IN_PORT NXM_HEADER  (0x0000, 0, 16) 
 
-/* Source or destination address in Ethernet header.
- *
- * Prereqs: None.
- *
- * Format: 48-bit Ethernet MAC address.
- *
- * Masking: The nxm_mask patterns 01:00:00:00:00:00 and FE:FF:FF:FF:FF:FF must
- *   be supported for NXM_OF_ETH_DST_W (as well as the trivial patterns that
- *   are all-0-bits or all-1-bits).  Support for other patterns and for masking
- *   of NXM_OF_ETH_SRC is optional. */
-#define NXM_OF_ETH_SRC    NXM_HEADER  (0x0000,  1, 6)
-#define NXM_OF_ETH_SRC_W  NXM_HEADER_W(0x0000,  1, 6)
-#define NXM_OF_ETH_DST    NXM_HEADER  (0x0000,  2, 6)
-#define NXM_OF_ETH_DST_W  NXM_HEADER_W(0x0000,  2, 6)
+/* VLAN id. */
+#define    TLV_EXT_DL_VLAN NXM_HEADER  (0x0000, 1, 2) 
 
+ /* VLAN priority. */
+#define    TLV_EXT_DL_VLAN_PCP NXM_HEADER  (0x0000, 2, 1)
 
-/* 802.1Q TCI.
- *
- * For a packet with an 802.1Q header, this is the Tag Control Information
- * (TCI) field, with the CFI bit forced to 1.  For a packet with no 802.1Q
- * header, this has value 0.
- *
- * Prereqs: None.
- *
- * Format: 16-bit integer in network byte order.
- *
- * Masking: Arbitrary masks.
- *
- * This field can be used in various ways:
- *
- *   - If it is not constrained at all, the nx_match matches packets without
- *     an 802.1Q header or with an 802.1Q header that has any TCI value.
- *
- *   - Testing for an exact match with 0 matches only packets without an
- *     802.1Q header.
- *
- *   - Testing for an exact match with a TCI value with CFI=1 matches packets
- *     that have an 802.1Q header with a specified VID and PCP.
- *
- *   - Testing for an exact match with a nonzero TCI value with CFI=0 does
- *     not make sense.  The switch may reject this combination.
- *
- *   - Testing with a specific VID and CFI=1, with nxm_mask=0x1fff, matches
- *     packets that have an 802.1Q header with that VID (and any PCP).
- *
- *   - Testing with a specific PCP and CFI=1, with nxm_mask=0xf000, matches
- *     packets that have an 802.1Q header with that PCP (and any VID).
- *
- *   - Testing with nxm_value=0, nxm_mask=0x0fff matches packets with no 802.1Q
- *     header or with an 802.1Q header with a VID of 0.
- *
- *   - Testing with nxm_value=0, nxm_mask=0xe000 matches packets with no 802.1Q
- *     header or with an 802.1Q header with a PCP of 0.
- *
- *   - Testing with nxm_value=0, nxm_mask=0xefff matches packets with no 802.1Q
- *     header or with an 802.1Q header with both VID and PCP of 0.
- */
-#define NXM_OF_VLAN_TCI   NXM_HEADER  (0x0000,  3, 2)
-#define NXM_OF_VLAN_TCI_W NXM_HEADER_W(0x0000,  3, 2)
+/* Ethernet frame type. */
+#define    TLV_EXT_DL_TYPE     NXM_HEADER  (0x0000, 3, 2)
+
+/* IP ToS (DSCP field, 6 bits). */
+#define    TLV_EXT_NW_TOS      NXM_HEADER  (0x0000, 4, 1) 
+
+/* IP protocol. */
+#define    TLV_EXT_NW_PROTO   NXM_HEADER  (0x0000, 5, 1)  
+
+/* TCP/UDP/SCTP source port. */
+#define    TLV_EXT_TP_SRC      NXM_HEADER  (0x0000, 6, 2) 
+
+ /* TCP/UDP/SCTP destination port. */ 
+#define    TLV_EXT_TP_DST  NXM_HEADER  (0x0000, 7, 2)  
+
+/* Ethernet destination address.*/
+#define    TLV_EXT_DL_DST   NXM_HEADER  (0x0000,8,6) 
+#define    TLV_EXT_DL_DST_W NXM_HEADER_W(0X0000,8,6) 
+
+/* Ethernet source address.*/
+#define    TLV_EXT_DL_SRC   NXM_HEADER  (0x0000, 9,6)
+#define    TLV_EXT_DL_SRC_W NXM_HEADER_W(0X0000,8,6) 
+
+ /* IP source address. */
+#define    TLV_EXT_IP_SRC      NXM_HEADER  (0x0000,10, 4)
+#define    TLV_EXT_IP_SRC_W  NXM_HEADER_W  (0x0000,10, 4) 
+
+/* IP destination address. */
+#define    TLV_EXT_IP_DST     NXM_HEADER  (0x0000,11 , 4) 
+#define    TLV_EXT_IP_DST_W     NXM_HEADER_W  (0x0000,11 , 4) 
 
 
-/* Packet's Ethernet type.
- *
- * For an Ethernet II packet this is taken from the Ethernet header.  For an
- * 802.2 LLC+SNAP header with OUI 00-00-00 this is taken from the SNAP header.
- * A packet that has neither format has value 0x05ff
- * (OFP_DL_TYPE_NOT_ETH_TYPE).
- *
- * For a packet with an 802.1Q header, this is the type of the encapsulated
- * frame.
- *
- * Prereqs: None.
- *
- * Format: 16-bit integer in network byte order.
- *
- * Masking: Not maskable. */
-#define NXM_OF_ETH_TYPE   NXM_HEADER  (0x0000,  4, 2)
+/* ## ------------------------------- ## */
+/* ## OpenFlow 1.1-compatible fields. ## */
+/* ## ------------------------------- ## */
 
-/* The "type of service" byte of the IP header, with the ECN bits forced to 0.
- *
- * Prereqs: NXM_OF_ETH_TYPE must be either 0x0800 or 0x86dd.
- *
- * Format: 8-bit integer with 2 least-significant bits forced to 0.
- *
- * Masking: Not maskable. */
-#define NXM_OF_IP_TOS     NXM_HEADER  (0x0000,  5, 1)
+/* MPLS label. */
+#define TLV_EXT_MPLS_LABEL NXM_HEADER (0x0001, 0, 3) 
 
-/* The "protocol" byte in the IP header.
- *
- * Prereqs: NXM_OF_ETH_TYPE must be either 0x0800 or 0x86dd.
- *
- * Format: 8-bit integer.
- *
- * Masking: Not maskable. */
-#define NXM_OF_IP_PROTO   NXM_HEADER  (0x0000,  6, 1)
+/* MPLS TC. */
+#define TLV_EXT_MPLS_TC NXM_HEADER (0x0001, 1, 1) 
 
-/* The source or destination address in the IP header.
- *
- * Prereqs: NXM_OF_ETH_TYPE must match 0x0800 exactly.
- *
- * Format: 32-bit integer in network byte order.
- *
- * Masking: Only CIDR masks are allowed, that is, masks that consist of N
- *   high-order bits set to 1 and the other 32-N bits set to 0. */
-#define NXM_OF_IP_SRC     NXM_HEADER  (0x0000,  7, 4)
-#define NXM_OF_IP_SRC_W   NXM_HEADER_W(0x0000,  7, 4)
-#define NXM_OF_IP_DST     NXM_HEADER  (0x0000,  8, 4)
-#define NXM_OF_IP_DST_W   NXM_HEADER_W(0x0000,  8, 4)
-
-/* The source or destination port in the TCP header.
- *
- * Prereqs:
- *   NXM_OF_ETH_TYPE must be either 0x0800 or 0x86dd.
- *   NXM_OF_IP_PROTO must match 6 exactly.
- *
- * Format: 16-bit integer in network byte order.
- *
- * Masking: Not maskable. */
-#define NXM_OF_TCP_SRC    NXM_HEADER  (0x0000,  9, 2)
-#define NXM_OF_TCP_DST    NXM_HEADER  (0x0000, 10, 2)
-
-/* The source or destination port in the UDP header.
- *
- * Prereqs:
- *   NXM_OF_ETH_TYPE must match either 0x0800 or 0x86dd.
- *   NXM_OF_IP_PROTO must match 17 exactly.
- *
- * Format: 16-bit integer in network byte order.
- *
- * Masking: Not maskable. */
-#define NXM_OF_UDP_SRC    NXM_HEADER  (0x0000, 11, 2)
-#define NXM_OF_UDP_DST    NXM_HEADER  (0x0000, 12, 2)
-
-/* The type or code in the ICMP header.
- *
- * Prereqs:
- *   NXM_OF_ETH_TYPE must match 0x0800 exactly.
- *   NXM_OF_IP_PROTO must match 1 exactly.
- *
- * Format: 8-bit integer.
- *
- * Masking: Not maskable. */
-#define NXM_OF_ICMP_TYPE  NXM_HEADER  (0x0000, 13, 1)
-#define NXM_OF_ICMP_CODE  NXM_HEADER  (0x0000, 14, 1)
-
-/* MPLS Label field.
- *
- * Prereqs: 
- *      NXM_OF_ETH_TYPE must match 0x8847 or 0x8848 exactly.
- *   
- * Format: 32-bit integer in network byte order.
- *
- * Masking: Not maskable. */
-#define NXM_OF_MPLS_LABEL NXM_HEADER  (0x0000,15,4)
-
-/* MPLS Traffic class field.
- *
- * Prereqs: 
- *      NXM_OF_ETH_TYPE must match 0x8847 or 0x8848 exactly.
- *   
- * Format: 32-bit integer in network byte order.
- *
- * Masking: Not maskable. */
-#define NXM_OF_MPLS_TC    NXM_HEADER  (0x0000,16,1) 
-
-/* ARP opcode.
- *
- * For an Ethernet+IP ARP packet, the opcode in the ARP header.  Always 0
- * otherwise.  Only ARP opcodes between 1 and 255 should be specified for
- * matching.
- *
- * Prereqs: NXM_OF_ETH_TYPE must match 0x0806 exactly.
- *
- * Format: 16-bit integer in network byte order.
- *
- * Masking: Not maskable. */
-#define NXM_OF_ARP_OP     NXM_HEADER  (0x0000, 17, 2)
-
-/* For an Ethernet+IP ARP packet, the source or target protocol address
- * in the ARP header.  Always 0 otherwise.
- *
- * Prereqs: NXM_OF_ETH_TYPE must match 0x0806 exactly.
- *
- * Format: 32-bit integer in network byte order.
- *
- * Masking: Only CIDR masks are allowed, that is, masks that consist of N
- *   high-order bits set to 1 and the other 32-N bits set to 0. */
-#define NXM_OF_ARP_SPA    NXM_HEADER  (0x0000, 18, 4)
-#define NXM_OF_ARP_SPA_W  NXM_HEADER_W(0x0000, 18, 4)
-#define NXM_OF_ARP_TPA    NXM_HEADER  (0x0000, 19, 4)
-#define NXM_OF_ARP_TPA_W  NXM_HEADER_W(0x0000, 19, 4)
-
-/* For an Ethernet+IP ARP packet, the source or target hardware address
- * in the ARP header.  Always 0 otherwise.
- *
- * Prereqs: NXM_OF_ETH_TYPE must match 0x0806 exactly.
- *
- * Format: 48-bit Ethernet MAC address.
- *
- * Masking: Not maskable. */
-#define NXM_NX_ARP_SHA    NXM_HEADER  (0x0001, 20, 6)
-#define NXM_NX_ARP_THA    NXM_HEADER  (0x0001, 21, 6)
+/* Metadata passed btw tables. */
+#define TLV_EXT_METADATA NXM_HEADER (0x0001, 2, 8)
 
 
-/* The source or destination address in the IPv6 header.
- *
- * Prereqs: NXM_OF_ETH_TYPE must match 0x86dd exactly.
- *
- * Format: 128-bit IPv6 address.
- *
- * Masking: Only CIDR masks are allowed, that is, masks that consist of N
- *   high-order bits set to 1 and the other 128-N bits set to 0. */
-#define NXM_NX_IPV6_SRC    NXM_HEADER  (0x0000, 22, 16)
-#define NXM_NX_IPV6_SRC_W  NXM_HEADER_W(0x0000, 22, 16)
-#define NXM_NX_IPV6_DST    NXM_HEADER  (0x0000, 23, 16)
-#define NXM_NX_IPV6_DST_W  NXM_HEADER_W(0x0000, 23, 16)
+/* ## ------------------------------- ## */
+/* ## IPv6 compatible fields. ## */
+/* ## ------------------------------- ## */
 
-/* The type or code in the ICMPv6 header.
- *
- * Prereqs:
- *   NXM_OF_ETH_TYPE must match 0x86dd exactly.
- *   NXM_OF_IP_PROTO must match 58 exactly.
- *
- * Format: 8-bit integer.
- *
- * Masking: Maskable. */
-#define NXM_NX_ICMPV6_TYPE NXM_HEADER  (0x0000, 24, 1)
-#define NXM_NX_ICMPV6_CODE NXM_HEADER  (0x0000, 25, 1)
+/* IPv6 source address */
+#define TLV_EXT_IPV6_SRC NXM_HEADER (0x0002, 0, 16)
+#define TLV_EXT_IPV6_SRC_W NXM_HEADER_W(0x0002, 0, 16)
 
-/* The target address in an IPv6 Neighbor Discovery message.
- *
- * Prereqs:
- *   NXM_OF_ETH_TYPE must match 0x86dd exactly.
- *   NXM_OF_IP_PROTO must match 58 exactly.
- *   NXM_OF_ICMPV6_TYPE must be either 135 or 136.
- *
- * Format: 128-bit IPv6 address.
- *
- * Masking: Not maskable. */
-#define NXM_NX_ND_TARGET   NXM_HEADER  (0x0000, 26, 16)
+/* IPv6 destination address*/
+#define TLV_EXT_IPV6_DST NXM_HEADER (0x0002, 1, 16) 
+#define TLV_EXT_IPV6_DST_W NXM_HEADER_W(0x0002, 1, 16)
 
-/* The source link-layer address option in an IPv6 Neighbor Discovery
- * message.
- *
- * Prereqs:
- *   NXM_OF_ETH_TYPE must match 0x86dd exactly.
- *   NXM_OF_IP_PROTO must match 58 exactly.
- *   NXM_OF_ICMPV6_TYPE must be exactly 135.
- *
- * Format: 48-bit Ethernet MAC address.
- *
- * Masking: Not maskable. */
-#define NXM_NX_ND_SLL      NXM_HEADER  (0x0000, 27, 6)
+/* ICMPv6 message type field */
+#define TLV_EXT_ICMPV6_TYPE NXM_HEADER (0x0002, 2, 1) 
 
-/* The target link-layer address option in an IPv6 Neighbor Discovery
- * message.
- *
- * Prereqs:
- *   NXM_OF_ETH_TYPE must match 0x86dd exactly.
- *   NXM_OF_IP_PROTO must match 58 exactly.
- *   NXM_OF_ICMPV6_TYPE must be exactly 136.
- *
- * Format: 48-bit Ethernet MAC address.
- *
- * Masking: Not maskable. */
-#define NXM_NX_ND_TLL      NXM_HEADER  (0x0000, 28, 6)
+/* ICMPv6 type code */
+#define TLV_EXT_ICMPV6_CODE NXM_HEADER (0x0002, 3, 1) 
+
+/* Flow Label, 20-bits*/
+#define TLV_EXT_IPV6_FLOW NXM_HEADER (0x0002, 4, 4)
+#define TLV_EXT_IPV6_FLOW_W NXM_HEADER_W (0x0002, 4, 4)
+
+/* Traffic Class */
+#define TLV_EXT_IPV6_TC NXM_HEADER (0x0002, 5, 1)
+#define TLV_EXT_IPV6_TC_W NXM_HEADER_W (0x0002, 5, 1)
+
+/* IPv6 Next Header Field*/
+#define TLV_EXT_IPV6_NH NXM_HEADER (0x0002,13,1) 
 
 
-/* Metadata passed between tables
- * 
- * Prereqs: None
- *   
- * Format: 64-bit Ethernet MAC address.
- *
- * Masking: Not maskable. */
-#define NXM_METADATA       NXM_HEADER  (0x0000, 29, 8)
-#define NXM_METADATA_W     NXM_HEADER  (0x0000, 30, 8)
+/* IPv6 Hop-by-Hop EH */
+#define TLV_EXT_IPV6_HBH_ NXM_HEADER_VL (0x0002, 6) 
+
+/* IPv6 Destination Option EH */
+#define TLV_EXT_IPV6_DO_ NXM_HEADER_VL (0x0002, 7)
+/* IPv6 Routing EH*/ 
+#define TLV_EXT_IPV6_RH_ NXM_HEADER_VL (0x0002, 8)
+
+/* IPv6 Fragmentation EH*/
+#define TLV_EXT_IPV6_FRAG_ NXM_HEADER_VL (0x0002, 9)
+
+/* IPv6 Fragmentation EH*/ 
+#define TLV_EXT_IPV6_AUTH_ NXM_HEADER_VL (0x0002, 10)
+
+/* IPv6 Encapsulating Security Payload */ 
+#define TLV_EXT_IPV6_ESP_ NXM_HEADER_VL (0x0002, 11) 
+
+/* IPv6 Mobility EH */
+#define TLV_EXT_IPV6_MH_ NXM_HEADER_VL (0x0002,12) 
 
 #define EXTENDED_MATCH_ID 0x00005678
 
