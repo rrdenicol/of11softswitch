@@ -5,23 +5,19 @@
  *      Author: rdenicol
  */
 
-#ifndef TEST_HPP_
-#define TEST_HPP_
+#ifndef NBEE_LINK_H_
+#define NBEE_LINK_H_
 
 #include <stdio.h>
 #include <stdint.h>
-#include "list_t.h"
+#include "../lib/list_t.h"
+#include "../lib/hmap.h"
 
 #define ETHADDLEN 6
 #define IPV6ADDLEN 16
 #define ETHTYPELEN 2
 #define ERRBUF_SIZE 256
 
-typedef struct pktfields {
-	char *name;
-	int len;
-	short *value;
-} pktfields_t;
 
 typedef struct pcap_pkthdr {
 	struct timeval ts;	/* time stamp */
@@ -41,21 +37,25 @@ struct ipv6pkt {
 
 };
 
-typedef struct packet_out{
-	list_t node;
-	uint32_t type;
-	uint16_t length;
-	uint8_t* value;
-}packet_out_t;
+typedef struct field_values {
+       list_t list_node;
+       uint8_t* value;
+}field_values_t;
+
+typedef struct packet_fields{
+       struct hmap_node hmap_node;
+           uint32_t header;                  /* NXM_* value. */
+           list_t fields;              /* List of field values (In one packet, there may be more than one value per field) */
+}packet_fields_t;
 
 #ifdef __cplusplus
 extern "C"
 #endif
-int initialize_nb_engine();
+int nbee_link_initialize();
 
 #ifdef __cplusplus
 extern "C"
 #endif
-int convertpkt_test(const unsigned char* pkt_in, list_t * pkt_out);
+int nbee_link_convertpkt(const unsigned char* pkt_in, struct hmap * pkt_out);
 
-#endif /* TEST_HPP_ */
+#endif /* NBEE_LINK_H_ */

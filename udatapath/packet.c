@@ -65,6 +65,7 @@ packet_create(struct datapath *dp, uint32_t in_port,
     pkt->table_id         = 0;
 
     pkt->handle_std = packet_handle_std_create(pkt);
+    pkt->handle_ext = packet_handle_ext_create(pkt);
     return pkt;
 }
 

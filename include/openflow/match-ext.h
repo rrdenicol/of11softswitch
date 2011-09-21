@@ -255,28 +255,36 @@
  * Prereqs: None.
  *
  * Format: 16-bit integer. */
-#define    TLV_EXT_IN_PORT NXM_HEADER  (0x0000, 0, 16) 
+#define    TLV_EXT_IN_PORT   NXM_HEADER    (0x0000, 0, 4)
+#define    TLV_EXT_IN_PORT_W NXM_HEADER_W  (0x0000, 0, 4)  
 
 /* VLAN id. */
-#define    TLV_EXT_DL_VLAN NXM_HEADER  (0x0000, 1, 2) 
+#define    TLV_EXT_DL_VLAN NXM_HEADER  (0x0000, 1, 2)
+#define    TLV_EXT_DL_VLAN_W NXM_HEADER_W  (0x0000, 1, 2) 
 
  /* VLAN priority. */
 #define    TLV_EXT_DL_VLAN_PCP NXM_HEADER  (0x0000, 2, 1)
+#define    TLV_EXT_DL_VLAN_PCP_W NXM_HEADER_W  (0x0000, 2, 1)
 
 /* Ethernet frame type. */
-#define    TLV_EXT_DL_TYPE     NXM_HEADER  (0x0000, 3, 2)
+#define    TLV_EXT_DL_TYPE     NXM_HEADER    (0x0000, 3, 2)
+#define    TLV_EXT_DL_TYPE_W   NXM_HEADER_W  (0x0000, 3, 2)
 
 /* IP ToS (DSCP field, 6 bits). */
-#define    TLV_EXT_NW_TOS      NXM_HEADER  (0x0000, 4, 1) 
+#define    TLV_EXT_NW_TOS      NXM_HEADER    (0x0000, 4, 1)
+#define    TLV_EXT_NW_TOS_W    NXM_HEADER_W  (0x0000, 4, 1)  
 
 /* IP protocol. */
-#define    TLV_EXT_NW_PROTO   NXM_HEADER  (0x0000, 5, 1)  
+#define    TLV_EXT_NW_PROTO   NXM_HEADER  (0x0000, 5, 1) 
+#define    TLV_EXT_NW_PROTO_W   NXM_HEADER_W  (0x0000, 5, 1) 
 
 /* TCP/UDP/SCTP source port. */
-#define    TLV_EXT_TP_SRC      NXM_HEADER  (0x0000, 6, 2) 
+#define    TLV_EXT_TP_SRC      NXM_HEADER  (0x0000, 6, 2)
+#define    TLV_EXT_TP_SRC_W    NXM_HEADER_W  (0x0000, 6, 2)  
 
  /* TCP/UDP/SCTP destination port. */ 
-#define    TLV_EXT_TP_DST  NXM_HEADER  (0x0000, 7, 2)  
+#define    TLV_EXT_TP_DST    NXM_HEADER    (0x0000, 7, 2)
+#define    TLV_EXT_TP_DST_W  NXM_HEADER_W  (0x0000, 7, 2)   
 
 /* Ethernet destination address.*/
 #define    TLV_EXT_DL_DST   NXM_HEADER  (0x0000,8,6) 
@@ -284,7 +292,7 @@
 
 /* Ethernet source address.*/
 #define    TLV_EXT_DL_SRC   NXM_HEADER  (0x0000, 9,6)
-#define    TLV_EXT_DL_SRC_W NXM_HEADER_W(0X0000,8,6) 
+#define    TLV_EXT_DL_SRC_W NXM_HEADER_W(0X0000,9,6) 
 
  /* IP source address. */
 #define    TLV_EXT_IP_SRC      NXM_HEADER  (0x0000,10, 4)
@@ -300,13 +308,16 @@
 /* ## ------------------------------- ## */
 
 /* MPLS label. */
-#define TLV_EXT_MPLS_LABEL NXM_HEADER (0x0001, 0, 3) 
+#define TLV_EXT_MPLS_LABEL NXM_HEADER (0x0001, 0, 3)
+#define TLV_EXT_MPLS_LABEL_W NXM_HEADER_W (0x0001, 0, 3)  
 
 /* MPLS TC. */
-#define TLV_EXT_MPLS_TC NXM_HEADER (0x0001, 1, 1) 
+#define TLV_EXT_MPLS_TC NXM_HEADER     (0x0001, 1, 1)
+#define TLV_EXT_MPLS_TC_W NXM_HEADER_W (0x0001, 1, 1)  
 
 /* Metadata passed btw tables. */
-#define TLV_EXT_METADATA NXM_HEADER (0x0001, 2, 8)
+#define TLV_EXT_METADATA NXM_HEADER     (0x0001, 2, 8)
+#define TLV_EXT_METADATA_W NXM_HEADER_W (0x0001, 2, 8)
 
 
 /* ## ------------------------------- ## */

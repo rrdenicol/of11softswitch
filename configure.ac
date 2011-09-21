@@ -30,6 +30,8 @@
 # advertising or publicity pertaining to the Software or any
 # derivatives without specific, written prior permission.
 
+
+
 AC_PREREQ(2.60)
 AC_INIT([openflow], [1.1.0], [openflow-discuss@openflowswitch.org])
 NX_BUILDNR
@@ -55,6 +57,8 @@ OFP_CHECK_IF_PACKET
 OFP_CHECK_HWTABLES
 OFP_CHECK_HWLIBS
 AC_SYS_LARGEFILE
+
+AC_CHECK_LIB(nbeelink,nbee_link_initialize)
 
 AC_CHECK_FUNCS([strsignal])
 
@@ -82,6 +86,8 @@ OFP_ENABLE_OPTION([-Wno-override-init])
 
 AC_CONFIG_FILES([Makefile 
 ])
+
+
 
 #AC_CONFIG_FILES([Makefile
 #datapath/Makefile

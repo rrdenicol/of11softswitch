@@ -30,12 +30,18 @@ udatapath_ofdatapath_SOURCES = \
 	udatapath/group_table.h \
 	udatapath/group_entry.c \
 	udatapath/group_entry.h \
+	udatapath/flow_hmap.c \
+	udatapath/flow_hmap.h \
+	udatapath/match_ext.c \
+	udatapath/match_ext.h \
 	udatapath/match_std.c \
 	udatapath/match_std.h \
 	udatapath/packet.c \
 	udatapath/packet.h \
 	udatapath/packet_handle_std.c \
 	udatapath/packet_handle_std.h \
+	udatapath/packet_handle_ext.c \
+	udatapath/packet_handle_ext.h \
 	udatapath/pipeline.c \
 	udatapath/pipeline.h \
 	udatapath/udatapath.c
@@ -96,6 +102,6 @@ udatapath_libudatapath_a_SOURCES = \
 	udatapath/udatapath.c
 
 udatapath_libudatapath_a_CPPFLAGS = $(AM_CPPFLAGS)
-udatapath_libudatapath_a_CPPFLAGS += -DOF_HW_PLAT -DUDATAPATH_AS_LIB -g
+udatapath_libudatapath_a_CPPFLAGS += -DOF_HW_PLAT -DUDATAPATH_AS_LIB -g -lnbee_link
 
 endif

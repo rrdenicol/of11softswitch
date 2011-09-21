@@ -77,6 +77,11 @@ struct hmap {
     size_t n;
 };
 
+#ifdef __cplusplus
+  extern "C"
+  {
+#endif
+
 /* Initializer for an empty hash map. */
 #define HMAP_INITIALIZER(HMAP) { &(HMAP)->one, NULL, 0, 0 }
 
@@ -250,5 +255,9 @@ hmap_next(const struct hmap *hmap, const struct hmap_node *node)
             ? node->next
             : hmap_next__(hmap, (node->hash & hmap->mask) + 1));
 }
+
+#ifdef __cplusplus
+  }
+#endif
 
 #endif /* hmap.h */

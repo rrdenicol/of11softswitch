@@ -62,6 +62,7 @@ struct packet {
                                       otherwise 0xffffffff */
 
     struct packet_handle_std  *handle_std; /* handler for standard match structure */
+    struct packet_handle_ext  *handle_ext; /* handler for extended match structure */
 };
 
 /* Creates a packet. */

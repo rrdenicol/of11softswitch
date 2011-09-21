@@ -119,8 +119,6 @@ static struct names32 wildcard_names[] = {
         {OFPFW_TP_DST,      "tp_dst"},
         {OFPFW_MPLS_LABEL,  "mpls_label"},
         {OFPFW_MPLS_TC,     "mpls_tc"},
-        {OFPFW_ARP_SHA,     "arp_sha"},     
-        {OFPFW_ARP_THA,     "arp_tha"}, 
         {OFPFW_ND_TARGET,    "nd_target"},
         {OFPFW_ALL,         "all"}
 };

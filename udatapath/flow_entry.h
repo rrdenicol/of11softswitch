@@ -68,9 +68,18 @@ struct flow_entry {
 
 struct packet;
 
+/* Returns true if the flow entry matches the match in the extended flow mod message. */
+bool
+ext_flow_entry_matches(struct flow_entry *entry, struct ofl_ext_flow_mod *mod, bool strict, bool check_cookie);
+
+
 /* Returns true if the flow entry matches the match in the flow mod message. */
 bool
-flow_entry_matches(struct flow_entry *entry, struct ofl_msg_flow_mod *mod, bool strict);
+flow_entry_matches(struct flow_entry *entry, struct ofl_msg_flow_mod *mod, bool strict, bool check_cookie);
+
+/* Returns true if the flow entry overlaps with the match in the extended flow mod message. */
+bool
+ext_flow_entry_overlaps(struct flow_entry *entry, struct ofl_ext_flow_mod *mod);
 
 /* Returns true if the flow entry overlaps with the match in the flow mod message. */
 bool
@@ -105,6 +114,10 @@ flow_entry_has_out_group(struct flow_entry *entry, uint32_t group);
 void
 flow_entry_update(struct flow_entry *entry);
 
+/* Creates an extended flow entry. */
+struct flow_entry *
+ext_flow_entry_create(struct datapath *dp, struct flow_table *table, struct ofl_ext_flow_mod *mod);
+
 /* Creates a flow entry. */
 struct flow_entry *
 flow_entry_create(struct datapath *dp, struct flow_table *table, struct ofl_msg_flow_mod *mod);
@@ -116,5 +129,7 @@ flow_entry_destroy(struct flow_entry *entry);
 /* Removes a flow entry with the given reason. A flow removed message is sent if needed. */
 void
 flow_entry_remove(struct flow_entry *entry, uint8_t reason);
+
+
 
 #endif /* FLOW_entry_H 1 */

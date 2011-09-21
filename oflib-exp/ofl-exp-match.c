@@ -48,6 +48,13 @@ OFL_LOG_INIT(LOG_MODULE)
 #define ETH_ADDR_ARGS(ea)                                   \
     (ea)[0], (ea)[1], (ea)[2], (ea)[3], (ea)[4], (ea)[5]
 
+#define IP_FMT "%"PRIu8".%"PRIu8".%"PRIu8".%"PRIu8
+#define IP_ARGS(ip)                             \
+        ((uint8_t *) ip)[0],                    \
+        ((uint8_t *) ip)[1],                    \
+        ((uint8_t *) ip)[2],                    \
+        ((uint8_t *) ip)[3]
+
 int
 ofl_exp_match_pack(struct ofl_match_header *src, struct ofp_match_header *dst){
     
@@ -133,15 +140,16 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
             int i;
             uint32_t header;
             unsigned length;
-            
             struct ofl_ext_match *m = (struct ofl_ext_match *)match;
             void *p = m->match_fields.entries;
             fprintf(stream, "extended_match{");
             for (i = 0; i < m->match_fields.total; i++){
-                header = ext_entry_ok(p,m->match_fields.size);
-                length = NXM_LENGTH(header);
+		        header = ext_entry_ok(p,m->match_fields.size);
+		        length = NXM_LENGTH(header);
+		        if(NXM_HASMASK(header))
+		            header = NXM_HEADER( NXM_VENDOR(header), NXM_FIELD(header), NXM_LENGTH(header)/2);
                 switch(header){
-                    case (NXM_OF_IN_PORT):{
+                    case (TLV_EXT_IN_PORT):{
                         uint32_t *value = p + 4;
                         /*Check for byte order */
                         fprintf(stream, " port=\"");   
@@ -150,20 +158,93 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
                         p += length + 4; 
                         break;
                     }
-                    case (NXM_OF_ETH_SRC): {
+                    case (TLV_EXT_DL_SRC): {
                         uint8_t *value = p + 4;
                         fprintf(stream, " dlsrc=\""ETH_ADDR_FMT"\"", ETH_ADDR_ARGS(value));  
                         p += length + 4;     
                         break;
-                    } 
-                    case (NXM_OF_ETH_TYPE): {
+                    }
+                    case (TLV_EXT_DL_DST): {
+                        uint8_t *value = p + 4;
+                        fprintf(stream, " dlsrc=\""ETH_ADDR_FMT"\"", ETH_ADDR_ARGS(value));  
+                        p += length + 4;     
+                        break;
+                    }  
+                    case (TLV_EXT_DL_VLAN): {
                         uint16_t *value = p + 4;
-                        fprintf(stream, " dltype=\"0x%"PRIx16"\"", *value); 
+                        fprintf(stream, " dl_vlan=\"0x%"PRIx16"\"", *value); 
                         p += length + 4; 
                         break;
                     
+                    }
+                    case (TLV_EXT_DL_VLAN_PCP): {
+                        uint8_t *value = p + 4;
+                        fprintf(stream, " dl_vlan_pcp=\"0x%"PRIx8"\"", *value); 
+                        p += length + 4; 
+                        break;
                     
                     }
+                    case (TLV_EXT_DL_TYPE): {
+                        uint16_t *value = p + 4;
+                        fprintf(stream, " dl_type=\"0x%"PRIx16"\"", *value); 
+                        p += length + 4; 
+                        break;
+                    
+                    }
+                    case (TLV_EXT_NW_TOS): {
+                        uint8_t *value = p + 4;
+                        fprintf(stream, " nw_tos=\"0x%"PRIx8"\"", *value); 
+                        p += length + 4; 
+                        break;
+                    
+                    }
+                    case (TLV_EXT_IP_SRC): {
+                        uint8_t *value = p + 4;
+                        fprintf(stream, " nw_src=\""IP_FMT"\"", IP_ARGS(value));  
+                        p += length + 4;     
+                        break;
+                    } 
+                    case (TLV_EXT_IP_DST): {
+                        uint8_t *value = p + 4;
+                        fprintf(stream, " nw_dst=\""IP_FMT"\"", IP_ARGS(value));  
+                        p += length + 4;     
+                        break;
+                    } 
+                   case (TLV_EXT_NW_PROTO): {
+                        uint8_t *value = p + 4;
+                        fprintf(stream, " nw_proto=\"0x%"PRIx8"\"", *value); 
+                        p += length + 4; 
+                        break;
+                    
+                    }
+                    case (TLV_EXT_TP_SRC): {
+                        uint16_t *value = p + 4;
+                        fprintf(stream, " tp_src=\"%"PRIx16"\"", *value); 
+                        p += length + 4; 
+                        break;      
+                    }
+                   case (TLV_EXT_TP_DST): {
+                        uint16_t *value = p + 4;
+                        fprintf(stream, " tp_dst=\"%"PRIx16"\"", *value); 
+                        p += length + 4; 
+                        break;
+                    
+                    }
+                    case (TLV_EXT_MPLS_LABEL): {
+                        uint32_t *value = p + 4;
+                        fprintf(stream, " mpls_label=\"%"PRIx32"\"", *value); 
+                        p += length + 4; 
+                        break;
+                    
+                    }
+                    case (TLV_EXT_MPLS_TC): {
+                        uint32_t *value = p + 4;
+                        fprintf(stream, " mpls_tc=\"%"PRIx32"\"", *value); 
+                        p += length + 4; 
+                        break;
+                    
+                    }
+                    
                     
                 
                 }

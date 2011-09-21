@@ -105,50 +105,57 @@ lib_libopenflow_a_DEPENDENCIES = oflib/ofl-actions.o \
 	oflib/ofl-structs-pack.o oflib/ofl-structs-print.o \
 	oflib/ofl-structs-unpack.o oflib/ofl-print.o \
 	oflib-exp/ofl-exp.o oflib-exp/ofl-exp-nicira.o \
+	oflib-exp/ofl-exp-match.o oflib-exp/ofl-exp-ext-messages.o \
+	oflib-exp/ofl-exp-ext-messages-pack.o \
+	oflib-exp/ofl-exp-ext-messages-unpack.o \
 	oflib-exp/ofl-exp-openflow.o
 am__lib_libopenflow_a_SOURCES_DIST = lib/backtrace.c lib/backtrace.h \
+	lib/bj_hash.c lib/bj_hash.h lib/byte-order.h \
 	lib/command-line.c lib/command-line.h lib/compiler.h \
 	lib/csum.c lib/csum.h lib/daemon.c lib/daemon.h \
 	lib/dhcp-client.c lib/dhcp-client.h lib/dhcp.c lib/dhcp.h \
 	lib/dhparams.h lib/dirs.c lib/dirs.h lib/dynamic-string.c \
 	lib/dynamic-string.h lib/fatal-signal.c lib/fatal-signal.h \
-	lib/fault.c lib/fault.h lib/flex-array.h lib/flow.c lib/flow.h \
-	lib/hash.c lib/hash.h lib/hmap.c lib/hmap.h lib/leak-checker.c \
-	lib/leak-checker.h lib/list.c lib/list.h lib/mac-learning.c \
-	lib/mac-learning.h lib/netdev.c lib/netdev.h lib/ofp.c \
-	lib/ofp.h lib/ofpbuf.c lib/ofpbuf.h lib/packets.h lib/pcap.c \
-	lib/pcap.h lib/poll-loop.c lib/poll-loop.h lib/port-array.c \
+	lib/fault.c lib/fault.h lib/flex-array.c lib/flex-array.h \
+	lib/flow.c lib/flow.h lib/hash.c lib/hash.h lib/hmap.c \
+	lib/hmap.h lib/leak-checker.c lib/leak-checker.h lib/list.c \
+	lib/list.h lib/list_t.c lib/list_t.h lib/nx-match.c \
+	lib/nx-match.h lib/mac-learning.c lib/mac-learning.h \
+	lib/netdev.c lib/netdev.h lib/ofp.c lib/ofp.h lib/ofpbuf.c \
+	lib/ofpbuf.h lib/packets.h lib/pcap.c lib/pcap.h \
+	lib/poll-loop.c lib/poll-loop.h lib/port-array.c \
 	lib/port-array.h lib/process.c lib/process.h lib/queue.c \
 	lib/queue.h lib/random.c lib/random.h lib/rconn.c lib/rconn.h \
 	lib/sat-math.h lib/shash.c lib/shash.h lib/signals.c \
 	lib/signals.h lib/socket-util.c lib/socket-util.h lib/stp.c \
 	lib/stp.h lib/svec.c lib/svec.h lib/tag.c lib/tag.h \
 	lib/timeval.c lib/timeval.h lib/type-props.h lib/util.c \
-	lib/util.h lib/vconn-provider.h lib/vconn-ssl.h \
-	lib/vconn-stream.c lib/vconn-stream.h lib/vconn-tcp.c \
-	lib/vconn-unix.c lib/vconn.c lib/vconn.h lib/vlog-modules.def \
-	lib/vlog-socket.c lib/vlog-socket.h lib/vlog.c lib/vlog.h \
-	lib/xtoxll.h lib/dpif.c lib/dpif.h lib/netlink-protocol.h \
-	lib/netlink.c lib/netlink.h lib/vconn-netlink.c \
-	lib/vconn-ssl.c
+	lib/util.h lib/unaligned.h lib/vconn-provider.h \
+	lib/vconn-ssl.h lib/vconn-stream.c lib/vconn-stream.h \
+	lib/vconn-tcp.c lib/vconn-unix.c lib/vconn.c lib/vconn.h \
+	lib/vlog-modules.def lib/vlog-socket.c lib/vlog-socket.h \
+	lib/vlog.c lib/vlog.h lib/xtoxll.h lib/dpif.c lib/dpif.h \
+	lib/netlink-protocol.h lib/netlink.c lib/netlink.h \
+	lib/vconn-netlink.c lib/vconn-ssl.c
 am__dirstamp = $(am__leading_dot)dirstamp
 am__objects_1 = lib/dpif.$(OBJEXT) \
 	lib/netlink.$(OBJEXT) \
 	lib/vconn-netlink.$(OBJEXT)
 #am__objects_2 = lib/vconn-ssl.$(OBJEXT)
 am_lib_libopenflow_a_OBJECTS = lib/backtrace.$(OBJEXT) \
-	lib/command-line.$(OBJEXT) lib/csum.$(OBJEXT) \
-	lib/daemon.$(OBJEXT) lib/dhcp-client.$(OBJEXT) \
-	lib/dhcp.$(OBJEXT) lib/dirs.$(OBJEXT) \
-	lib/dynamic-string.$(OBJEXT) lib/fatal-signal.$(OBJEXT) \
-	lib/fault.$(OBJEXT) lib/flow.$(OBJEXT) lib/hash.$(OBJEXT) \
+	lib/bj_hash.$(OBJEXT) lib/command-line.$(OBJEXT) \
+	lib/csum.$(OBJEXT) lib/daemon.$(OBJEXT) \
+	lib/dhcp-client.$(OBJEXT) lib/dhcp.$(OBJEXT) \
+	lib/dirs.$(OBJEXT) lib/dynamic-string.$(OBJEXT) \
+	lib/fatal-signal.$(OBJEXT) lib/fault.$(OBJEXT) \
+	lib/flex-array.$(OBJEXT) lib/flow.$(OBJEXT) lib/hash.$(OBJEXT) \
 	lib/hmap.$(OBJEXT) lib/leak-checker.$(OBJEXT) \
-	lib/list.$(OBJEXT) lib/mac-learning.$(OBJEXT) \
-	lib/netdev.$(OBJEXT) lib/ofp.$(OBJEXT) lib/ofpbuf.$(OBJEXT) \
-	lib/pcap.$(OBJEXT) lib/poll-loop.$(OBJEXT) \
-	lib/port-array.$(OBJEXT) lib/process.$(OBJEXT) \
-	lib/queue.$(OBJEXT) lib/random.$(OBJEXT) lib/rconn.$(OBJEXT) \
-	lib/shash.$(OBJEXT) lib/signals.$(OBJEXT) \
+	lib/list.$(OBJEXT) lib/list_t.$(OBJEXT) lib/nx-match.$(OBJEXT) \
+	lib/mac-learning.$(OBJEXT) lib/netdev.$(OBJEXT) \
+	lib/ofp.$(OBJEXT) lib/ofpbuf.$(OBJEXT) lib/pcap.$(OBJEXT) \
+	lib/poll-loop.$(OBJEXT) lib/port-array.$(OBJEXT) \
+	lib/process.$(OBJEXT) lib/queue.$(OBJEXT) lib/random.$(OBJEXT) \
+	lib/rconn.$(OBJEXT) lib/shash.$(OBJEXT) lib/signals.$(OBJEXT) \
 	lib/socket-util.$(OBJEXT) lib/stp.$(OBJEXT) lib/svec.$(OBJEXT) \
 	lib/tag.$(OBJEXT) lib/timeval.$(OBJEXT) lib/util.$(OBJEXT) \
 	lib/vconn-stream.$(OBJEXT) lib/vconn-tcp.$(OBJEXT) \
@@ -162,6 +169,9 @@ lib_libopenflow_a_OBJECTS = $(am_lib_libopenflow_a_OBJECTS) \
 oflib_exp_liboflib_exp_a_AR = $(AR) $(ARFLAGS)
 oflib_exp_liboflib_exp_a_LIBADD =
 am_oflib_exp_liboflib_exp_a_OBJECTS = oflib-exp/ofl-exp.$(OBJEXT) \
+	oflib-exp/ofl-exp-ext-messages.$(OBJEXT) \
+	oflib-exp/ofl-exp-ext-messages-unpack.$(OBJEXT) \
+	oflib-exp/ofl-exp-ext-messages-pack.$(OBJEXT) \
 	oflib-exp/ofl-exp-match.$(OBJEXT) \
 	oflib-exp/ofl-exp-nicira.$(OBJEXT) \
 	oflib-exp/ofl-exp-openflow.$(OBJEXT)
@@ -242,9 +252,12 @@ am_udatapath_ofdatapath_OBJECTS =  \
 	udatapath/udatapath_ofdatapath-flow_entry.$(OBJEXT) \
 	udatapath/udatapath_ofdatapath-group_table.$(OBJEXT) \
 	udatapath/udatapath_ofdatapath-group_entry.$(OBJEXT) \
+	udatapath/udatapath_ofdatapath-flow_hmap.$(OBJEXT) \
+	udatapath/udatapath_ofdatapath-match_ext.$(OBJEXT) \
 	udatapath/udatapath_ofdatapath-match_std.$(OBJEXT) \
 	udatapath/udatapath_ofdatapath-packet.$(OBJEXT) \
 	udatapath/udatapath_ofdatapath-packet_handle_std.$(OBJEXT) \
+	udatapath/udatapath_ofdatapath-packet_handle_ext.$(OBJEXT) \
 	udatapath/udatapath_ofdatapath-pipeline.$(OBJEXT) \
 	udatapath/udatapath_ofdatapath-udatapath.$(OBJEXT)
 udatapath_ofdatapath_OBJECTS = $(am_udatapath_ofdatapath_OBJECTS)
@@ -369,11 +382,11 @@ DIST_ARCHIVES = $(distdir).tar.gz
 GZIP_ENV = --best
 distuninstallcheck_listfiles = find . -type f -print
 distcleancheck_listfiles = find . -type f -print
-ACLOCAL = ${SHELL} /work/OpenFlow_IPv6_Support/of11softswitch/build-aux/missing --run aclocal-1.11
-AMTAR = ${SHELL} /work/OpenFlow_IPv6_Support/of11softswitch/build-aux/missing --run tar
-AUTOCONF = ${SHELL} /work/OpenFlow_IPv6_Support/of11softswitch/build-aux/missing --run autoconf
-AUTOHEADER = ${SHELL} /work/OpenFlow_IPv6_Support/of11softswitch/build-aux/missing --run autoheader
-AUTOMAKE = ${SHELL} /work/OpenFlow_IPv6_Support/of11softswitch/build-aux/missing --run automake-1.11
+ACLOCAL = ${SHELL} /home/denicol/git/ederlf/of11softswitch/build-aux/missing --run aclocal-1.11
+AMTAR = ${SHELL} /home/denicol/git/ederlf/of11softswitch/build-aux/missing --run tar
+AUTOCONF = ${SHELL} /home/denicol/git/ederlf/of11softswitch/build-aux/missing --run autoconf
+AUTOHEADER = ${SHELL} /home/denicol/git/ederlf/of11softswitch/build-aux/missing --run autoheader
+AUTOMAKE = ${SHELL} /home/denicol/git/ederlf/of11softswitch/build-aux/missing --run automake-1.11
 AWK = mawk
 BUILDNR = 0
 CC = gcc
@@ -391,7 +404,7 @@ EGREP = /bin/grep -E
 EXEEXT = 
 FAULT_LIBS = -ldl
 GREP = /bin/grep
-HAVE_DPKG_BUILDPACKAGE = no
+HAVE_DPKG_BUILDPACKAGE = yes
 HW_LIB = 
 HW_TABLES = 
 INSTALL = /usr/bin/install -c
@@ -402,10 +415,10 @@ INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 KARCH = 
 LDFLAGS = 
 LIBOBJS = 
-LIBS = 
+LIBS = -lnbeelink 
 LOGDIR = ${localstatedir}/log/${PACKAGE}
 LTLIBOBJS = 
-MAKEINFO = ${SHELL} /work/OpenFlow_IPv6_Support/of11softswitch/build-aux/missing --run makeinfo
+MAKEINFO = ${SHELL} /home/denicol/git/ederlf/of11softswitch/build-aux/missing --run makeinfo
 MKDIR_P = /bin/mkdir -p
 OBJEXT = o
 PACKAGE = openflow
@@ -429,10 +442,10 @@ SSL_CFLAGS =
 SSL_LIBS = 
 STRIP = 
 VERSION = 1.1.0
-abs_builddir = /work/OpenFlow_IPv6_Support/of11softswitch
-abs_srcdir = /work/OpenFlow_IPv6_Support/of11softswitch
-abs_top_builddir = /work/OpenFlow_IPv6_Support/of11softswitch
-abs_top_srcdir = /work/OpenFlow_IPv6_Support/of11softswitch
+abs_builddir = /home/denicol/git/ederlf/of11softswitch
+abs_srcdir = /home/denicol/git/ederlf/of11softswitch
+abs_top_builddir = /home/denicol/git/ederlf/of11softswitch
+abs_top_srcdir = /home/denicol/git/ederlf/of11softswitch
 ac_ct_CC = gcc
 am__include = include
 am__leading_dot = .
@@ -451,7 +464,7 @@ host_alias =
 htmldir = ${docdir}
 includedir = ${prefix}/include
 infodir = ${datarootdir}/info
-install_sh = ${SHELL} /work/OpenFlow_IPv6_Support/of11softswitch/build-aux/install-sh
+install_sh = ${SHELL} /home/denicol/git/ederlf/of11softswitch/build-aux/install-sh
 libdir = ${exec_prefix}/lib
 libexecdir = ${exec_prefix}/libexec
 localedir = ${datarootdir}/locale
@@ -555,28 +568,32 @@ noinst_SCRIPTS = utilities/ofp-pki-cgi utilities/ofp-parse-leaks
 ro_c = echo '/* -*- mode: c; buffer-read-only: t -*- */'
 SUFFIXES = .in
 lib_libopenflow_a_SOURCES = lib/backtrace.c lib/backtrace.h \
+	lib/bj_hash.c lib/bj_hash.h lib/byte-order.h \
 	lib/command-line.c lib/command-line.h lib/compiler.h \
 	lib/csum.c lib/csum.h lib/daemon.c lib/daemon.h \
 	lib/dhcp-client.c lib/dhcp-client.h lib/dhcp.c lib/dhcp.h \
 	lib/dhparams.h lib/dirs.c lib/dirs.h lib/dynamic-string.c \
 	lib/dynamic-string.h lib/fatal-signal.c lib/fatal-signal.h \
-	lib/fault.c lib/fault.h lib/flex-array.h lib/flow.c lib/flow.h \
-	lib/hash.c lib/hash.h lib/hmap.c lib/hmap.h lib/leak-checker.c \
-	lib/leak-checker.h lib/list.c lib/list.h lib/mac-learning.c \
-	lib/mac-learning.h lib/netdev.c lib/netdev.h lib/ofp.c \
-	lib/ofp.h lib/ofpbuf.c lib/ofpbuf.h lib/packets.h lib/pcap.c \
-	lib/pcap.h lib/poll-loop.c lib/poll-loop.h lib/port-array.c \
+	lib/fault.c lib/fault.h lib/flex-array.c lib/flex-array.h \
+	lib/flow.c lib/flow.h lib/hash.c lib/hash.h lib/hmap.c \
+	lib/hmap.h lib/leak-checker.c lib/leak-checker.h lib/list.c \
+	lib/list.h lib/list_t.c lib/list_t.h lib/nx-match.c \
+	lib/nx-match.h lib/mac-learning.c lib/mac-learning.h \
+	lib/netdev.c lib/netdev.h lib/ofp.c lib/ofp.h lib/ofpbuf.c \
+	lib/ofpbuf.h lib/packets.h lib/pcap.c lib/pcap.h \
+	lib/poll-loop.c lib/poll-loop.h lib/port-array.c \
 	lib/port-array.h lib/process.c lib/process.h lib/queue.c \
 	lib/queue.h lib/random.c lib/random.h lib/rconn.c lib/rconn.h \
 	lib/sat-math.h lib/shash.c lib/shash.h lib/signals.c \
 	lib/signals.h lib/socket-util.c lib/socket-util.h lib/stp.c \
 	lib/stp.h lib/svec.c lib/svec.h lib/tag.c lib/tag.h \
 	lib/timeval.c lib/timeval.h lib/type-props.h lib/util.c \
-	lib/util.h lib/vconn-provider.h lib/vconn-ssl.h \
-	lib/vconn-stream.c lib/vconn-stream.h lib/vconn-tcp.c \
-	lib/vconn-unix.c lib/vconn.c lib/vconn.h lib/vlog-modules.def \
-	lib/vlog-socket.c lib/vlog-socket.h lib/vlog.c lib/vlog.h \
-	lib/xtoxll.h $(am__append_3) $(am__append_4)
+	lib/util.h lib/unaligned.h lib/vconn-provider.h \
+	lib/vconn-ssl.h lib/vconn-stream.c lib/vconn-stream.h \
+	lib/vconn-tcp.c lib/vconn-unix.c lib/vconn.c lib/vconn.h \
+	lib/vlog-modules.def lib/vlog-socket.c lib/vlog-socket.h \
+	lib/vlog.c lib/vlog.h lib/xtoxll.h $(am__append_3) \
+	$(am__append_4)
 lib_libopenflow_a_LIBADD = oflib/ofl-actions.o \
                            oflib/ofl-actions-pack.o \
                            oflib/ofl-actions-print.o \
@@ -592,6 +609,10 @@ lib_libopenflow_a_LIBADD = oflib/ofl-actions.o \
                            oflib/ofl-print.o \
                            oflib-exp/ofl-exp.o \
                            oflib-exp/ofl-exp-nicira.o \
+			   oflib-exp/ofl-exp-match.o \
+			   oflib-exp/ofl-exp-ext-messages.o \
+			   oflib-exp/ofl-exp-ext-messages-pack.o \
+			   oflib-exp/ofl-exp-ext-messages-unpack.o \
                            oflib-exp/ofl-exp-openflow.o
 
 #nodist_lib_libopenflow_a_SOURCES = lib/dhparams.c
@@ -619,6 +640,10 @@ oflib_liboflib_a_SOURCES = \
 oflib_exp_liboflib_exp_a_SOURCES = \
 	oflib-exp/ofl-exp.c \
 	oflib-exp/ofl-exp.h \
+	oflib-exp/ofl-exp-ext-messages.c \
+	oflib-exp/ofl-exp-ext-messages-unpack.c \
+	oflib-exp/ofl-exp-ext-messages-pack.c \
+	oflib-exp/ofl-exp-ext-messages.h \
 	oflib-exp/ofl-exp-match.c \
 	oflib-exp/ofl-exp-match.h \
 	oflib-exp/ofl-exp-nicira.c \
@@ -682,12 +707,18 @@ udatapath_ofdatapath_SOURCES = \
 	udatapath/group_table.h \
 	udatapath/group_entry.c \
 	udatapath/group_entry.h \
+	udatapath/flow_hmap.c \
+	udatapath/flow_hmap.h \
+	udatapath/match_ext.c \
+	udatapath/match_ext.h \
 	udatapath/match_std.c \
 	udatapath/match_std.h \
 	udatapath/packet.c \
 	udatapath/packet.h \
 	udatapath/packet_handle_std.c \
 	udatapath/packet_handle_std.h \
+	udatapath/packet_handle_ext.c \
+	udatapath/packet_handle_ext.h \
 	udatapath/pipeline.c \
 	udatapath/pipeline.h \
 	udatapath/udatapath.c
@@ -729,7 +760,7 @@ udatapath_ofdatapath_CPPFLAGS = $(AM_CPPFLAGS) $(am__append_5)
 
 #udatapath_libudatapath_a_CPPFLAGS =  \
 #	$(AM_CPPFLAGS) -DOF_HW_PLAT \
-#	-DUDATAPATH_AS_LIB -g
+#	-DUDATAPATH_AS_LIB -g -lnbee_link
 all: config.h
 	$(MAKE) $(AM_MAKEFLAGS) all-recursive
 
@@ -797,6 +828,8 @@ lib/$(DEPDIR)/$(am__dirstamp):
 	@: > lib/$(DEPDIR)/$(am__dirstamp)
 lib/backtrace.$(OBJEXT): lib/$(am__dirstamp) \
 	lib/$(DEPDIR)/$(am__dirstamp)
+lib/bj_hash.$(OBJEXT): lib/$(am__dirstamp) \
+	lib/$(DEPDIR)/$(am__dirstamp)
 lib/command-line.$(OBJEXT): lib/$(am__dirstamp) \
 	lib/$(DEPDIR)/$(am__dirstamp)
 lib/csum.$(OBJEXT): lib/$(am__dirstamp) lib/$(DEPDIR)/$(am__dirstamp)
@@ -811,12 +844,18 @@ lib/dynamic-string.$(OBJEXT): lib/$(am__dirstamp) \
 lib/fatal-signal.$(OBJEXT): lib/$(am__dirstamp) \
 	lib/$(DEPDIR)/$(am__dirstamp)
 lib/fault.$(OBJEXT): lib/$(am__dirstamp) lib/$(DEPDIR)/$(am__dirstamp)
+lib/flex-array.$(OBJEXT): lib/$(am__dirstamp) \
+	lib/$(DEPDIR)/$(am__dirstamp)
 lib/flow.$(OBJEXT): lib/$(am__dirstamp) lib/$(DEPDIR)/$(am__dirstamp)
 lib/hash.$(OBJEXT): lib/$(am__dirstamp) lib/$(DEPDIR)/$(am__dirstamp)
 lib/hmap.$(OBJEXT): lib/$(am__dirstamp) lib/$(DEPDIR)/$(am__dirstamp)
 lib/leak-checker.$(OBJEXT): lib/$(am__dirstamp) \
 	lib/$(DEPDIR)/$(am__dirstamp)
 lib/list.$(OBJEXT): lib/$(am__dirstamp) lib/$(DEPDIR)/$(am__dirstamp)
+lib/list_t.$(OBJEXT): lib/$(am__dirstamp) \
+	lib/$(DEPDIR)/$(am__dirstamp)
+lib/nx-match.$(OBJEXT): lib/$(am__dirstamp) \
+	lib/$(DEPDIR)/$(am__dirstamp)
 lib/mac-learning.$(OBJEXT): lib/$(am__dirstamp) \
 	lib/$(DEPDIR)/$(am__dirstamp)
 lib/netdev.$(OBJEXT): lib/$(am__dirstamp) \
@@ -877,6 +916,12 @@ oflib-exp/$(DEPDIR)/$(am__dirstamp):
 	@: > oflib-exp/$(DEPDIR)/$(am__dirstamp)
 oflib-exp/ofl-exp.$(OBJEXT): oflib-exp/$(am__dirstamp) \
 	oflib-exp/$(DEPDIR)/$(am__dirstamp)
+oflib-exp/ofl-exp-ext-messages.$(OBJEXT): oflib-exp/$(am__dirstamp) \
+	oflib-exp/$(DEPDIR)/$(am__dirstamp)
+oflib-exp/ofl-exp-ext-messages-unpack.$(OBJEXT):  \
+	oflib-exp/$(am__dirstamp) oflib-exp/$(DEPDIR)/$(am__dirstamp)
+oflib-exp/ofl-exp-ext-messages-pack.$(OBJEXT):  \
+	oflib-exp/$(am__dirstamp) oflib-exp/$(DEPDIR)/$(am__dirstamp)
 oflib-exp/ofl-exp-match.$(OBJEXT): oflib-exp/$(am__dirstamp) \
 	oflib-exp/$(DEPDIR)/$(am__dirstamp)
 oflib-exp/ofl-exp-nicira.$(OBJEXT): oflib-exp/$(am__dirstamp) \
@@ -1054,11 +1099,17 @@ udatapath/udatapath_ofdatapath-group_table.$(OBJEXT):  \
 	udatapath/$(am__dirstamp) udatapath/$(DEPDIR)/$(am__dirstamp)
 udatapath/udatapath_ofdatapath-group_entry.$(OBJEXT):  \
 	udatapath/$(am__dirstamp) udatapath/$(DEPDIR)/$(am__dirstamp)
+udatapath/udatapath_ofdatapath-flow_hmap.$(OBJEXT):  \
+	udatapath/$(am__dirstamp) udatapath/$(DEPDIR)/$(am__dirstamp)
+udatapath/udatapath_ofdatapath-match_ext.$(OBJEXT):  \
+	udatapath/$(am__dirstamp) udatapath/$(DEPDIR)/$(am__dirstamp)
 udatapath/udatapath_ofdatapath-match_std.$(OBJEXT):  \
 	udatapath/$(am__dirstamp) udatapath/$(DEPDIR)/$(am__dirstamp)
 udatapath/udatapath_ofdatapath-packet.$(OBJEXT):  \
 	udatapath/$(am__dirstamp) udatapath/$(DEPDIR)/$(am__dirstamp)
 udatapath/udatapath_ofdatapath-packet_handle_std.$(OBJEXT):  \
+	udatapath/$(am__dirstamp) udatapath/$(DEPDIR)/$(am__dirstamp)
+udatapath/udatapath_ofdatapath-packet_handle_ext.$(OBJEXT):  \
 	udatapath/$(am__dirstamp) udatapath/$(DEPDIR)/$(am__dirstamp)
 udatapath/udatapath_ofdatapath-pipeline.$(OBJEXT):  \
 	udatapath/$(am__dirstamp) udatapath/$(DEPDIR)/$(am__dirstamp)
@@ -1233,6 +1284,7 @@ uninstall-dist_sbinSCRIPTS:
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
 	-rm -f lib/backtrace.$(OBJEXT)
+	-rm -f lib/bj_hash.$(OBJEXT)
 	-rm -f lib/command-line.$(OBJEXT)
 	-rm -f lib/csum.$(OBJEXT)
 	-rm -f lib/daemon.$(OBJEXT)
@@ -1244,14 +1296,17 @@ mostlyclean-compile:
 	-rm -f lib/dynamic-string.$(OBJEXT)
 	-rm -f lib/fatal-signal.$(OBJEXT)
 	-rm -f lib/fault.$(OBJEXT)
+	-rm -f lib/flex-array.$(OBJEXT)
 	-rm -f lib/flow.$(OBJEXT)
 	-rm -f lib/hash.$(OBJEXT)
 	-rm -f lib/hmap.$(OBJEXT)
 	-rm -f lib/leak-checker.$(OBJEXT)
 	-rm -f lib/list.$(OBJEXT)
+	-rm -f lib/list_t.$(OBJEXT)
 	-rm -f lib/mac-learning.$(OBJEXT)
 	-rm -f lib/netdev.$(OBJEXT)
 	-rm -f lib/netlink.$(OBJEXT)
+	-rm -f lib/nx-match.$(OBJEXT)
 	-rm -f lib/ofp.$(OBJEXT)
 	-rm -f lib/ofpbuf.$(OBJEXT)
 	-rm -f lib/pcap.$(OBJEXT)
@@ -1277,6 +1332,9 @@ mostlyclean-compile:
 	-rm -f lib/vconn.$(OBJEXT)
 	-rm -f lib/vlog-socket.$(OBJEXT)
 	-rm -f lib/vlog.$(OBJEXT)
+	-rm -f oflib-exp/ofl-exp-ext-messages-pack.$(OBJEXT)
+	-rm -f oflib-exp/ofl-exp-ext-messages-unpack.$(OBJEXT)
+	-rm -f oflib-exp/ofl-exp-ext-messages.$(OBJEXT)
 	-rm -f oflib-exp/ofl-exp-match.$(OBJEXT)
 	-rm -f oflib-exp/ofl-exp-nicira.$(OBJEXT)
 	-rm -f oflib-exp/ofl-exp-openflow.$(OBJEXT)
@@ -1327,11 +1385,14 @@ mostlyclean-compile:
 	-rm -f udatapath/udatapath_ofdatapath-dp_exp.$(OBJEXT)
 	-rm -f udatapath/udatapath_ofdatapath-dp_ports.$(OBJEXT)
 	-rm -f udatapath/udatapath_ofdatapath-flow_entry.$(OBJEXT)
+	-rm -f udatapath/udatapath_ofdatapath-flow_hmap.$(OBJEXT)
 	-rm -f udatapath/udatapath_ofdatapath-flow_table.$(OBJEXT)
 	-rm -f udatapath/udatapath_ofdatapath-group_entry.$(OBJEXT)
 	-rm -f udatapath/udatapath_ofdatapath-group_table.$(OBJEXT)
+	-rm -f udatapath/udatapath_ofdatapath-match_ext.$(OBJEXT)
 	-rm -f udatapath/udatapath_ofdatapath-match_std.$(OBJEXT)
 	-rm -f udatapath/udatapath_ofdatapath-packet.$(OBJEXT)
+	-rm -f udatapath/udatapath_ofdatapath-packet_handle_ext.$(OBJEXT)
 	-rm -f udatapath/udatapath_ofdatapath-packet_handle_std.$(OBJEXT)
 	-rm -f udatapath/udatapath_ofdatapath-pipeline.$(OBJEXT)
 	-rm -f udatapath/udatapath_ofdatapath-udatapath.$(OBJEXT)
@@ -1344,6 +1405,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 include lib/$(DEPDIR)/backtrace.Po
+include lib/$(DEPDIR)/bj_hash.Po
 include lib/$(DEPDIR)/command-line.Po
 include lib/$(DEPDIR)/csum.Po
 include lib/$(DEPDIR)/daemon.Po
@@ -1355,14 +1417,17 @@ include lib/$(DEPDIR)/dpif.Po
 include lib/$(DEPDIR)/dynamic-string.Po
 include lib/$(DEPDIR)/fatal-signal.Po
 include lib/$(DEPDIR)/fault.Po
+include lib/$(DEPDIR)/flex-array.Po
 include lib/$(DEPDIR)/flow.Po
 include lib/$(DEPDIR)/hash.Po
 include lib/$(DEPDIR)/hmap.Po
 include lib/$(DEPDIR)/leak-checker.Po
 include lib/$(DEPDIR)/list.Po
+include lib/$(DEPDIR)/list_t.Po
 include lib/$(DEPDIR)/mac-learning.Po
 include lib/$(DEPDIR)/netdev.Po
 include lib/$(DEPDIR)/netlink.Po
+include lib/$(DEPDIR)/nx-match.Po
 include lib/$(DEPDIR)/ofp.Po
 include lib/$(DEPDIR)/ofpbuf.Po
 include lib/$(DEPDIR)/pcap.Po
@@ -1388,6 +1453,9 @@ include lib/$(DEPDIR)/vconn-unix.Po
 include lib/$(DEPDIR)/vconn.Po
 include lib/$(DEPDIR)/vlog-socket.Po
 include lib/$(DEPDIR)/vlog.Po
+include oflib-exp/$(DEPDIR)/ofl-exp-ext-messages-pack.Po
+include oflib-exp/$(DEPDIR)/ofl-exp-ext-messages-unpack.Po
+include oflib-exp/$(DEPDIR)/ofl-exp-ext-messages.Po
 include oflib-exp/$(DEPDIR)/ofl-exp-match.Po
 include oflib-exp/$(DEPDIR)/ofl-exp-nicira.Po
 include oflib-exp/$(DEPDIR)/ofl-exp-openflow.Po
@@ -1438,11 +1506,14 @@ include udatapath/$(DEPDIR)/udatapath_ofdatapath-dp_control.Po
 include udatapath/$(DEPDIR)/udatapath_ofdatapath-dp_exp.Po
 include udatapath/$(DEPDIR)/udatapath_ofdatapath-dp_ports.Po
 include udatapath/$(DEPDIR)/udatapath_ofdatapath-flow_entry.Po
+include udatapath/$(DEPDIR)/udatapath_ofdatapath-flow_hmap.Po
 include udatapath/$(DEPDIR)/udatapath_ofdatapath-flow_table.Po
 include udatapath/$(DEPDIR)/udatapath_ofdatapath-group_entry.Po
 include udatapath/$(DEPDIR)/udatapath_ofdatapath-group_table.Po
+include udatapath/$(DEPDIR)/udatapath_ofdatapath-match_ext.Po
 include udatapath/$(DEPDIR)/udatapath_ofdatapath-match_std.Po
 include udatapath/$(DEPDIR)/udatapath_ofdatapath-packet.Po
+include udatapath/$(DEPDIR)/udatapath_ofdatapath-packet_handle_ext.Po
 include udatapath/$(DEPDIR)/udatapath_ofdatapath-packet_handle_std.Po
 include udatapath/$(DEPDIR)/udatapath_ofdatapath-pipeline.Po
 include udatapath/$(DEPDIR)/udatapath_ofdatapath-udatapath.Po
@@ -1859,6 +1930,34 @@ udatapath/udatapath_ofdatapath-group_entry.obj: udatapath/group_entry.c
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(udatapath_ofdatapath_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o udatapath/udatapath_ofdatapath-group_entry.obj `if test -f 'udatapath/group_entry.c'; then $(CYGPATH_W) 'udatapath/group_entry.c'; else $(CYGPATH_W) '$(srcdir)/udatapath/group_entry.c'; fi`
 
+udatapath/udatapath_ofdatapath-flow_hmap.o: udatapath/flow_hmap.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(udatapath_ofdatapath_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT udatapath/udatapath_ofdatapath-flow_hmap.o -MD -MP -MF udatapath/$(DEPDIR)/udatapath_ofdatapath-flow_hmap.Tpo -c -o udatapath/udatapath_ofdatapath-flow_hmap.o `test -f 'udatapath/flow_hmap.c' || echo '$(srcdir)/'`udatapath/flow_hmap.c
+	$(am__mv) udatapath/$(DEPDIR)/udatapath_ofdatapath-flow_hmap.Tpo udatapath/$(DEPDIR)/udatapath_ofdatapath-flow_hmap.Po
+#	source='udatapath/flow_hmap.c' object='udatapath/udatapath_ofdatapath-flow_hmap.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(udatapath_ofdatapath_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o udatapath/udatapath_ofdatapath-flow_hmap.o `test -f 'udatapath/flow_hmap.c' || echo '$(srcdir)/'`udatapath/flow_hmap.c
+
+udatapath/udatapath_ofdatapath-flow_hmap.obj: udatapath/flow_hmap.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(udatapath_ofdatapath_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT udatapath/udatapath_ofdatapath-flow_hmap.obj -MD -MP -MF udatapath/$(DEPDIR)/udatapath_ofdatapath-flow_hmap.Tpo -c -o udatapath/udatapath_ofdatapath-flow_hmap.obj `if test -f 'udatapath/flow_hmap.c'; then $(CYGPATH_W) 'udatapath/flow_hmap.c'; else $(CYGPATH_W) '$(srcdir)/udatapath/flow_hmap.c'; fi`
+	$(am__mv) udatapath/$(DEPDIR)/udatapath_ofdatapath-flow_hmap.Tpo udatapath/$(DEPDIR)/udatapath_ofdatapath-flow_hmap.Po
+#	source='udatapath/flow_hmap.c' object='udatapath/udatapath_ofdatapath-flow_hmap.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(udatapath_ofdatapath_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o udatapath/udatapath_ofdatapath-flow_hmap.obj `if test -f 'udatapath/flow_hmap.c'; then $(CYGPATH_W) 'udatapath/flow_hmap.c'; else $(CYGPATH_W) '$(srcdir)/udatapath/flow_hmap.c'; fi`
+
+udatapath/udatapath_ofdatapath-match_ext.o: udatapath/match_ext.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(udatapath_ofdatapath_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT udatapath/udatapath_ofdatapath-match_ext.o -MD -MP -MF udatapath/$(DEPDIR)/udatapath_ofdatapath-match_ext.Tpo -c -o udatapath/udatapath_ofdatapath-match_ext.o `test -f 'udatapath/match_ext.c' || echo '$(srcdir)/'`udatapath/match_ext.c
+	$(am__mv) udatapath/$(DEPDIR)/udatapath_ofdatapath-match_ext.Tpo udatapath/$(DEPDIR)/udatapath_ofdatapath-match_ext.Po
+#	source='udatapath/match_ext.c' object='udatapath/udatapath_ofdatapath-match_ext.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(udatapath_ofdatapath_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o udatapath/udatapath_ofdatapath-match_ext.o `test -f 'udatapath/match_ext.c' || echo '$(srcdir)/'`udatapath/match_ext.c
+
+udatapath/udatapath_ofdatapath-match_ext.obj: udatapath/match_ext.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(udatapath_ofdatapath_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT udatapath/udatapath_ofdatapath-match_ext.obj -MD -MP -MF udatapath/$(DEPDIR)/udatapath_ofdatapath-match_ext.Tpo -c -o udatapath/udatapath_ofdatapath-match_ext.obj `if test -f 'udatapath/match_ext.c'; then $(CYGPATH_W) 'udatapath/match_ext.c'; else $(CYGPATH_W) '$(srcdir)/udatapath/match_ext.c'; fi`
+	$(am__mv) udatapath/$(DEPDIR)/udatapath_ofdatapath-match_ext.Tpo udatapath/$(DEPDIR)/udatapath_ofdatapath-match_ext.Po
+#	source='udatapath/match_ext.c' object='udatapath/udatapath_ofdatapath-match_ext.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(udatapath_ofdatapath_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o udatapath/udatapath_ofdatapath-match_ext.obj `if test -f 'udatapath/match_ext.c'; then $(CYGPATH_W) 'udatapath/match_ext.c'; else $(CYGPATH_W) '$(srcdir)/udatapath/match_ext.c'; fi`
+
 udatapath/udatapath_ofdatapath-match_std.o: udatapath/match_std.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(udatapath_ofdatapath_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT udatapath/udatapath_ofdatapath-match_std.o -MD -MP -MF udatapath/$(DEPDIR)/udatapath_ofdatapath-match_std.Tpo -c -o udatapath/udatapath_ofdatapath-match_std.o `test -f 'udatapath/match_std.c' || echo '$(srcdir)/'`udatapath/match_std.c
 	$(am__mv) udatapath/$(DEPDIR)/udatapath_ofdatapath-match_std.Tpo udatapath/$(DEPDIR)/udatapath_ofdatapath-match_std.Po
@@ -1900,6 +1999,20 @@ udatapath/udatapath_ofdatapath-packet_handle_std.obj: udatapath/packet_handle_st
 #	source='udatapath/packet_handle_std.c' object='udatapath/udatapath_ofdatapath-packet_handle_std.obj' libtool=no \
 #	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
 #	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(udatapath_ofdatapath_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o udatapath/udatapath_ofdatapath-packet_handle_std.obj `if test -f 'udatapath/packet_handle_std.c'; then $(CYGPATH_W) 'udatapath/packet_handle_std.c'; else $(CYGPATH_W) '$(srcdir)/udatapath/packet_handle_std.c'; fi`
+
+udatapath/udatapath_ofdatapath-packet_handle_ext.o: udatapath/packet_handle_ext.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(udatapath_ofdatapath_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT udatapath/udatapath_ofdatapath-packet_handle_ext.o -MD -MP -MF udatapath/$(DEPDIR)/udatapath_ofdatapath-packet_handle_ext.Tpo -c -o udatapath/udatapath_ofdatapath-packet_handle_ext.o `test -f 'udatapath/packet_handle_ext.c' || echo '$(srcdir)/'`udatapath/packet_handle_ext.c
+	$(am__mv) udatapath/$(DEPDIR)/udatapath_ofdatapath-packet_handle_ext.Tpo udatapath/$(DEPDIR)/udatapath_ofdatapath-packet_handle_ext.Po
+#	source='udatapath/packet_handle_ext.c' object='udatapath/udatapath_ofdatapath-packet_handle_ext.o' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(udatapath_ofdatapath_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o udatapath/udatapath_ofdatapath-packet_handle_ext.o `test -f 'udatapath/packet_handle_ext.c' || echo '$(srcdir)/'`udatapath/packet_handle_ext.c
+
+udatapath/udatapath_ofdatapath-packet_handle_ext.obj: udatapath/packet_handle_ext.c
+	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(udatapath_ofdatapath_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT udatapath/udatapath_ofdatapath-packet_handle_ext.obj -MD -MP -MF udatapath/$(DEPDIR)/udatapath_ofdatapath-packet_handle_ext.Tpo -c -o udatapath/udatapath_ofdatapath-packet_handle_ext.obj `if test -f 'udatapath/packet_handle_ext.c'; then $(CYGPATH_W) 'udatapath/packet_handle_ext.c'; else $(CYGPATH_W) '$(srcdir)/udatapath/packet_handle_ext.c'; fi`
+	$(am__mv) udatapath/$(DEPDIR)/udatapath_ofdatapath-packet_handle_ext.Tpo udatapath/$(DEPDIR)/udatapath_ofdatapath-packet_handle_ext.Po
+#	source='udatapath/packet_handle_ext.c' object='udatapath/udatapath_ofdatapath-packet_handle_ext.obj' libtool=no \
+#	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) \
+#	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(udatapath_ofdatapath_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o udatapath/udatapath_ofdatapath-packet_handle_ext.obj `if test -f 'udatapath/packet_handle_ext.c'; then $(CYGPATH_W) 'udatapath/packet_handle_ext.c'; else $(CYGPATH_W) '$(srcdir)/udatapath/packet_handle_ext.c'; fi`
 
 udatapath/udatapath_ofdatapath-pipeline.o: udatapath/pipeline.c
 	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(udatapath_ofdatapath_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT udatapath/udatapath_ofdatapath-pipeline.o -MD -MP -MF udatapath/$(DEPDIR)/udatapath_ofdatapath-pipeline.Tpo -c -o udatapath/udatapath_ofdatapath-pipeline.o `test -f 'udatapath/pipeline.c' || echo '$(srcdir)/'`udatapath/pipeline.c
@@ -2562,10 +2675,10 @@ uninstall-man: uninstall-man8
 	uninstall-man uninstall-man8
 
 
-#distcheck-hook:
-#	cd $(srcdir) && dpkg-buildpackage -rfakeroot -us -uc
-#	cd $(srcdir) && fakeroot ./debian/rules clean
 distcheck-hook:
+	cd $(srcdir) && dpkg-buildpackage -rfakeroot -us -uc
+	cd $(srcdir) && fakeroot ./debian/rules clean
+#distcheck-hook:
 .in:
 	$(PERL) $(srcdir)/soexpand.pl -I$(srcdir) < $< | \
 	    sed -e 's,[@]LOGDIR[@],$(LOGDIR),g' \

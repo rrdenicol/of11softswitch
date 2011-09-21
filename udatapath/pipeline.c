@@ -49,6 +49,8 @@
 #include "util.h"
 #include "vlog.h"
 
+#include "../nbee_link/nbee_link.h"
+
 #define LOG_MODULE VLM_pipeline
 
 static struct vlog_rate_limit rl = VLOG_RATE_LIMIT_INIT(60, 60);
@@ -71,6 +73,8 @@ pipeline_create(struct datapath *dp) {
         pl->tables[i] = flow_table_create(dp, i);
     }
     pl->dp = dp;
+
+    nbee_link_initialize();
 
     return pl;
 }
@@ -99,6 +103,7 @@ send_packet_to_controller(struct pipeline *pl, struct packet *pkt, uint8_t table
 void
 pipeline_process_packet(struct pipeline *pl, struct packet *pkt) {
     struct flow_table *table, *next_table;
+    bool matched;
 
     if (VLOG_IS_DBG_ENABLED(LOG_MODULE)) {
         char *pkt_str = packet_to_string(pkt);
@@ -120,7 +125,10 @@ pipeline_process_packet(struct pipeline *pl, struct packet *pkt) {
     }
 
     next_table = pl->tables[0];
+    matched = false;
 
+    /* TODO Zoltan: works correctly, but perhaps not the best way to do this
+       sketching a state machine would surely help */
     while (next_table != NULL) {
         struct flow_entry *entry;
 
@@ -139,8 +147,9 @@ pipeline_process_packet(struct pipeline *pl, struct packet *pkt) {
                 free(m);
             }
 
-            execute_entry(pl, entry, &next_table, pkt);
+            matched = true;
 
+            execute_entry(pl, entry, &next_table, pkt);
             if (next_table == NULL) {
                 action_set_execute(pkt->action_set, pkt);
                 packet_destroy(pkt);
@@ -148,12 +157,19 @@ pipeline_process_packet(struct pipeline *pl, struct packet *pkt) {
             }
 
         } else {
-			VLOG_DBG_RL(LOG_MODULE, &rl, "no matching entry found. executing table conf.");
-			execute_table(pl, table, &next_table, pkt);
-			if (next_table == NULL) {
-				packet_destroy(pkt);
-				return;
-			}
+            if (matched) {
+                VLOG_DBG_RL(LOG_MODULE, &rl, "no matching entry found. executing action set.");
+                action_set_execute(pkt->action_set, pkt);
+                packet_destroy(pkt);
+                return;
+            } else {
+                VLOG_DBG_RL(LOG_MODULE, &rl, "no matching entry found. executing table conf.");
+                execute_table(pl, table, &next_table, pkt);
+                if (next_table == NULL) {
+                    packet_destroy(pkt);
+                    return;
+                }
+            }
         }
     }
     VLOG_WARN_RL(LOG_MODULE, &rl, "Reached outside of pipeline processing cycle.");

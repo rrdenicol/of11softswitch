@@ -869,8 +869,11 @@ int main(int argc, char *argv[])
 
     argc -= optind;
     argv += optind;
-    if (argc < 1)
+   
+    if (argc < 1){
         ofp_fatal(0, "missing SWITCH; use --help for help");
+             
+    }
     if (argc < 2)
         ofp_fatal(0, "missing COMMAND; use --help for help");
 
@@ -1031,6 +1034,8 @@ parse_wildcards(char *str, uint32_t *wc) {
     size_t i, idx = 0;
 
     (*wc) = 0x00000000;
+    if(!strcmp(str,"none"))
+        return 0;
 
     while (idx < strlen(str)) {
         if (str[idx] == WILDCARD_SUB) {
@@ -1074,6 +1079,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
     //TODO find a better way to do it
     struct ofl_match_standard *m; 
     struct ofl_ext_match *ext_m;
+    uint32_t wildcards;
     
     
     if (!flow_format){
@@ -1086,8 +1092,17 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
         ext_m->header.type = EXT_MATCH;
         ext_m->header.length = sizeof(struct ext_match);
         flex_array_init(&(ext_m->match_fields));
+        /* Wildcards should be the first field when the flow type is EXT_MATCH */
+        token = strtok_r(str, KEY_SEP, &saveptr);
+        if (parse_wildcards(token + strlen(MATCH_WILDCARDS KEY_VAL), &(wildcards))) {
+            ofp_fatal(0, "Wildcard must be the first match field when using nxm : %s.", token);
+        }
+        str = NULL;
     }
+    
+    
     for (token = strtok_r(str, KEY_SEP, &saveptr); token != NULL; token = strtok_r(NULL, KEY_SEP, &saveptr)) {
+        /*in_port */
         if (strncmp(token, MATCH_IN_PORT KEY_VAL, strlen(MATCH_IN_PORT KEY_VAL)) == 0) {
             if(!flow_format){
                 if (parse_port(token + strlen(MATCH_IN_PORT KEY_VAL), &(m->in_port))) {
@@ -1097,24 +1112,26 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
             else {
                 uint32_t port;
                 parse_port(token + strlen(MATCH_IN_PORT KEY_VAL), &port);
-                ext_put_32(&ext_m->match_fields, NXM_OF_IN_PORT, port);
+                if( (wildcards & OFPFW_IN_PORT) != 0){
+                     ext_put_32w(&ext_m->match_fields, TLV_EXT_IN_PORT_W, port, 0x00);
+                     ext_m->header.length += 4;        
+                }
+                else ext_put_32(&ext_m->match_fields, TLV_EXT_IN_PORT, port);
                 ext_m->header.length += 8;
             
             }/*mount the extended entry */    
             continue;
         }
+        /*wildcards */
         if (strncmp(token, MATCH_WILDCARDS KEY_VAL, strlen(MATCH_WILDCARDS KEY_VAL)) == 0) {
             if(!flow_format){
                 if (parse_wildcards(token + strlen(MATCH_WILDCARDS KEY_VAL), &(m->wildcards))) {
                     ofp_fatal(0, "Error parsing wildcards: %s.", token);
                 }
             }
-            else {
-            
-            
-            }/*mount the extended entry */    
             continue;
         }
+        /*DL_SRC*/
         if (strncmp(token, MATCH_DL_SRC KEY_VAL, strlen(MATCH_DL_SRC KEY_VAL)) == 0) {
             if(!flow_format){
                 if (parse_dl_addr(token + strlen(MATCH_DL_SRC KEY_VAL), m->dl_src)) {
@@ -1125,23 +1142,12 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 uint8_t dl_src[ETH_ADDR_LEN];
                 if (parse_dl_addr(token + strlen(MATCH_DL_SRC KEY_VAL), dl_src)) 
                     ofp_fatal(0, "Error parsing dl_src: %s.", token);
-                ext_put_eth(&ext_m->match_fields,NXM_OF_ETH_SRC,dl_src);
+                ext_put_eth(&ext_m->match_fields,TLV_EXT_DL_SRC,dl_src);
                 ext_m->header.length += 28;       
             }    
             continue;
         }
-        if (strncmp(token, MATCH_DL_SRC KEY_VAL, strlen(MATCH_DL_SRC KEY_VAL)) == 0) {
-            if(!flow_format){
-                if (parse_dl_addr(token + strlen(MATCH_DL_SRC KEY_VAL), m->dl_src)) {
-                    ofp_fatal(0, "Error parsing dl_src: %s.", token);
-                }
-            }
-            else {
-            
-            
-            }   
-            continue;
-        }
+        /*dl_src_mask */
         if (strncmp(token, MATCH_DL_SRC_MASK KEY_VAL, strlen(MATCH_DL_SRC_MASK KEY_VAL)) == 0) {
             if(!flow_format){
                 if (parse_dl_addr(token + strlen(MATCH_DL_SRC_MASK KEY_VAL), m->dl_src_mask)) {
@@ -1149,11 +1155,12 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 }
             }
             else {
-            
+                
             
             }    
             continue;
         }
+        /*DL_DST */
         if (strncmp(token, MATCH_DL_DST KEY_VAL, strlen(MATCH_DL_DST KEY_VAL)) == 0) {
             if(!flow_format){ 
                 if (parse_dl_addr(token + strlen(MATCH_DL_DST KEY_VAL), m->dl_dst)) {
@@ -1161,7 +1168,11 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 }
             }
             else {
-                
+                uint8_t dl_dst[ETH_ADDR_LEN];
+                if (parse_dl_addr(token + strlen(MATCH_DL_DST KEY_VAL), dl_dst)) 
+                    ofp_fatal(0, "Error parsing dl_dst: %s.", token);
+                ext_put_eth(&ext_m->match_fields,TLV_EXT_DL_DST,dl_dst);
+                ext_m->header.length += 28;       
             
             }    
             continue;
@@ -1173,22 +1184,12 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 }
             }
             else {
+                
             
             }    
             continue;
         }
-        if (strncmp(token, MATCH_DL_VLAN KEY_VAL, strlen(MATCH_DL_VLAN KEY_VAL)) == 0) {
-            if(!flow_format){ 
-                if (parse_dl_addr(token + strlen(MATCH_DL_DST_MASK KEY_VAL), m->dl_dst_mask)) {
-                    ofp_fatal(0, "Error parsing dl_dst_mask: %s.", token);
-                }
-            }
-            else {
-            
-            
-            }    
-            continue;
-        }
+        /*dl_vlan */
         if (strncmp(token, MATCH_DL_VLAN KEY_VAL, strlen(MATCH_DL_VLAN KEY_VAL)) == 0) {
             if(!flow_format){
                 if (parse_vlan_vid(token + strlen(MATCH_DL_VLAN KEY_VAL), &(m->dl_vlan))) {
@@ -1196,11 +1197,22 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 }
             }
             else {
-            
+                uint16_t dl_vlan;
+                if (parse16(token + strlen(MATCH_DL_VLAN KEY_VAL), NULL, 0, 0xffff, &dl_vlan))
+                    ofp_fatal(0, "Error parsing dl_vlan label: %s.", token);
+                if( (wildcards & OFPFW_DL_VLAN) != 0){
+                    uint16_t mask = 0xffff;
+                    ext_put_16w(&ext_m->match_fields, TLV_EXT_DL_VLAN_W, dl_vlan, mask);
+                    ext_m->header.length += 2;   
+                }
+                else 
+                    ext_put_16(&ext_m->match_fields, TLV_EXT_DL_VLAN, dl_vlan);
+                ext_m->header.length += 6;
             
             }    
             continue;
         }
+        /*dl_vlan_pcp */
         if (strncmp(token, MATCH_DL_VLAN_PCP KEY_VAL, strlen(MATCH_DL_VLAN_PCP KEY_VAL)) == 0) {
             if(!flow_format){ 
                 if (parse8(token + strlen(MATCH_DL_VLAN_PCP KEY_VAL), NULL, 0, 0x7, &(m->dl_vlan_pcp))) {
@@ -1208,13 +1220,23 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 }
             }
             else {
-            
-            
-            
+                uint8_t dl_vlan_pcp;
+                if (parse8(token + strlen(MATCH_DL_VLAN_PCP KEY_VAL), NULL, 0, 0x3f, &(dl_vlan_pcp))) {
+                    ofp_fatal(0, "Error parsing dl_vlan_pcp: %s.", token);
+                }
+                if( (wildcards & OFPFW_DL_VLAN_PCP) != 0){
+                    uint8_t mask = 0xff;
+                    ext_put_8w(&ext_m->match_fields, TLV_EXT_DL_VLAN_PCP_W, dl_vlan_pcp, mask);
+                    ext_m->header.length += 1;   
+                }
+                else 
+                    ext_put_8(&ext_m->match_fields, TLV_EXT_DL_VLAN_PCP, dl_vlan_pcp);
+                ext_m->header.length += 5;  
             
             }
             continue;
         }
+        /*dl_type */
         if (strncmp(token, MATCH_DL_TYPE KEY_VAL, strlen(MATCH_DL_TYPE KEY_VAL)) == 0 ) {
             if(!flow_format){
                 if (parse16(token + strlen(MATCH_DL_TYPE KEY_VAL), NULL, 0, 0xffff, &(m->dl_type))) {
@@ -1225,12 +1247,19 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 uint16_t dl_type;
                 if (parse16(token + strlen(MATCH_DL_TYPE KEY_VAL), NULL, 0, 0xffff, &dl_type))
                     ofp_fatal(0, "Error parsing dl_type: %s.", token);
-                ext_put_16(&ext_m->match_fields, NXM_OF_ETH_TYPE, dl_type);
+                if( (wildcards & OFPFW_DL_TYPE) != 0){
+                    uint16_t mask = 0xffff;
+                    ext_put_16w(&ext_m->match_fields, TLV_EXT_DL_TYPE_W, dl_type, mask);
+                    ext_m->header.length += 2;   
+                }
+                else 
+                    ext_put_16(&ext_m->match_fields, TLV_EXT_DL_TYPE, dl_type);
                 ext_m->header.length += 6;
             
             } 
             continue;
         }
+        /* NW_TOS */
         if (strncmp(token, MATCH_NW_TOS KEY_VAL, strlen(MATCH_NW_TOS KEY_VAL)) == 0) {
             if(!flow_format){ 
                 if (parse8(token + strlen(MATCH_NW_TOS KEY_VAL), NULL, 0, 0x3f, &(m->nw_tos))) {
@@ -1238,10 +1267,22 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 }
             }
             else {
-            
+                uint8_t nw_tos;
+                if (parse8(token + strlen(MATCH_NW_TOS KEY_VAL), NULL, 0, 0x3f, &(nw_tos))) {
+                    ofp_fatal(0, "Error parsing nw_tos: %s.", token);
+                }
+                if( (wildcards & OFPFW_NW_TOS) != 0){
+                    uint8_t mask = 0xff;
+                    ext_put_8w(&ext_m->match_fields, TLV_EXT_NW_TOS_W, nw_tos, mask);
+                    ext_m->header.length += 1;   
+                }
+                else 
+                    ext_put_8(&ext_m->match_fields, TLV_EXT_NW_TOS, nw_tos);
+                ext_m->header.length += 5;
             }
             continue;
         }
+        /*NW_PROTO */
         if (strncmp(token, MATCH_NW_PROTO KEY_VAL, strlen(MATCH_NW_PROTO KEY_VAL)) == 0) {
             if(!flow_format){ 
                 if (parse8(token + strlen(MATCH_NW_PROTO KEY_VAL), NULL, 0, 0xff, &(m->nw_proto))) {
@@ -1249,10 +1290,22 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 }
             }
             else {
-            
+                uint8_t nw_tos;
+                if (parse8(token + strlen(MATCH_NW_PROTO KEY_VAL), NULL, 0, 0xff, &(nw_tos))) {
+                    ofp_fatal(0, "Error parsing nw_proto: %s.", token);
+                }
+                if( (wildcards & OFPFW_NW_PROTO) != 0){
+                    uint8_t mask = 0xff;
+                    ext_put_8w(&ext_m->match_fields, TLV_EXT_NW_PROTO_W, nw_tos, mask);
+                    ext_m->header.length += 1;   
+                }
+                else 
+                    ext_put_8(&ext_m->match_fields, TLV_EXT_NW_PROTO, nw_tos);
+                ext_m->header.length += 5;
             }
             continue;
         }
+        /*NW_SRC */
         if (strncmp(token, MATCH_NW_SRC KEY_VAL, strlen(MATCH_NW_SRC KEY_VAL)) == 0) {
             if(!flow_format){ 
                 if (parse_nw_addr(token + strlen(MATCH_NW_SRC KEY_VAL), &(m->nw_src))) {
@@ -1260,7 +1313,16 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 }
             }
             else {
-            
+                uint32_t nw_src;
+                if (parse_nw_addr(token + strlen(MATCH_NW_SRC KEY_VAL), &(nw_src))) {
+                    ofp_fatal(0, "Error parsing nw_src: %s.", token);
+                }
+                /*if( (wildcards & OFPFW_IN_PORT) != 0){
+                     ext_put_32w(&ext_m->match_fields, TLV_EXT_IN_PORT_W, port, 0x00);
+                     ext_m->header.length += 4;        
+                }*/
+                ext_put_32(&ext_m->match_fields, TLV_EXT_IP_SRC, nw_src);
+                ext_m->header.length += 8;
             
             }
             continue;
@@ -1277,6 +1339,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
             }
             continue;
         }
+        /*NW_DST */
         if (strncmp(token, MATCH_NW_DST KEY_VAL, strlen(MATCH_NW_DST KEY_VAL)) == 0) {
             if(!flow_format){ 
                 if (parse_nw_addr(token + strlen(MATCH_NW_DST KEY_VAL), &(m->nw_dst))) {
@@ -1284,7 +1347,16 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 }
             }
             else {
-            
+                uint32_t nw_dst;
+                if (parse_nw_addr(token + strlen(MATCH_NW_DST KEY_VAL), &(nw_dst))) {
+                    ofp_fatal(0, "Error parsing nw_src: %s.", token);
+                }
+                /*if( (wildcards & OFPFW_IN_PORT) != 0){
+                     ext_put_32w(&ext_m->match_fields, TLV_EXT_IN_PORT_W, port, 0x00);
+                     ext_m->header.length += 4;        
+                }*/
+                ext_put_32(&ext_m->match_fields, TLV_EXT_IP_DST, nw_dst);
+                ext_m->header.length += 8;
             
             }
             continue;
@@ -1301,6 +1373,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
             }
             continue;
         }
+        /*TP_SRC */
         if (strncmp(token, MATCH_TP_SRC KEY_VAL, strlen(MATCH_TP_SRC KEY_VAL)) == 0) {
             if(!flow_format){ 
                 if (parse16(token + strlen(MATCH_TP_SRC KEY_VAL), NULL, 0, 0xffff, &(m->tp_src))) {
@@ -1308,11 +1381,22 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 }
             }
             else {
-            
+                uint16_t tp_src;
+                if (parse16(token + strlen(MATCH_TP_SRC KEY_VAL), NULL, 0, 0xffff, &tp_src))
+                    ofp_fatal(0, "Error parsing dl_type: %s.", token);
+                if( (wildcards & OFPFW_TP_SRC) != 0){
+                    uint16_t mask = 0xffff;
+                    ext_put_16w(&ext_m->match_fields, TLV_EXT_TP_SRC_W, tp_src, mask);
+                    ext_m->header.length += 2;   
+                }
+                else 
+                    ext_put_16(&ext_m->match_fields, TLV_EXT_TP_SRC, tp_src);
+                ext_m->header.length += 6;
             
             }
             continue;
         }
+        /*TP_DST */
         if (strncmp(token, MATCH_TP_DST KEY_VAL, strlen(MATCH_TP_DST KEY_VAL)) == 0) {
             if(!flow_format){ 
                 if (parse16(token + strlen(MATCH_TP_DST KEY_VAL), NULL, 0, 0xffff, &(m->tp_dst))) {
@@ -1320,10 +1404,21 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 }
             }
             else {
-            
+                uint16_t tp_dst;
+                if (parse16(token + strlen(MATCH_TP_DST KEY_VAL), NULL, 0, 0xffff, &tp_dst))
+                    ofp_fatal(0, "Error parsing dl_type: %s.", token);
+                if( (wildcards & OFPFW_TP_DST) != 0){
+                    uint16_t mask = 0xffff;
+                    ext_put_16w(&ext_m->match_fields, TLV_EXT_TP_DST_W, tp_dst, mask);
+                    ext_m->header.length += 2;   
+                }
+                else 
+                    ext_put_16(&ext_m->match_fields, TLV_EXT_TP_DST, tp_dst);
+                ext_m->header.length += 6;
             }
             continue;
         }
+        /*MPLS_LABEL */
         if (strncmp(token, MATCH_MPLS_LABEL KEY_VAL, strlen(MATCH_MPLS_LABEL KEY_VAL)) == 0) {
             if(!flow_format){ 
                 if (parse32(token + strlen(MATCH_MPLS_LABEL KEY_VAL), NULL, 0, 0xfffff, &(m->mpls_label))) {
@@ -1331,10 +1426,18 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 }
             }
             else {
-            
+                uint32_t mpls_label;
+                parse_port(token + strlen(MATCH_MPLS_LABEL KEY_VAL), &mpls_label);
+                if( (wildcards & OFPFW_MPLS_LABEL) != 0){
+                     ext_put_32w(&ext_m->match_fields, TLV_EXT_MPLS_LABEL_W, mpls_label, 0x00000000);
+                     ext_m->header.length += 4;        
+                }
+                else ext_put_32(&ext_m->match_fields, TLV_EXT_MPLS_LABEL,mpls_label);
+                ext_m->header.length += 8;
             }
             continue;
         }
+        /* MPLS_TC */
         if (strncmp(token, MATCH_MPLS_TC KEY_VAL, strlen(MATCH_MPLS_TC KEY_VAL)) == 0) {
             if(!flow_format){ 
                 if (parse8(token + strlen(MATCH_MPLS_TC KEY_VAL), NULL, 0, 0x07, &(m->mpls_tc))) {
@@ -1342,7 +1445,18 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                 }
             }
             else {
-            
+                uint8_t mpls_tc;
+                if (parse8(token + strlen(MATCH_MPLS_TC KEY_VAL), NULL, 0, 0x3f, &(mpls_tc))) {
+                    ofp_fatal(0, "Error parsing nw_tos: %s.", token);
+                }
+                if( (wildcards & OFPFW_NW_TOS) != 0){
+                    uint8_t mask = 0xff;
+                    ext_put_8w(&ext_m->match_fields, TLV_EXT_MPLS_TC_W, mpls_tc, mask);
+                    ext_m->header.length += 1;   
+                }
+                else 
+                    ext_put_8(&ext_m->match_fields, TLV_EXT_MPLS_TC, mpls_tc);
+                ext_m->header.length += 5;
             
             }
             continue;
@@ -2063,8 +2177,6 @@ parse_vlan_vid(char *str, uint16_t *vid) {
 
 
 
-
-
 static int
 parse8(char *str, struct names8 *names, size_t names_num, uint8_t max, uint8_t *val) {
     size_t i;
@@ -2162,8 +2274,8 @@ str_to_ipv6(const char *str_, struct in6_addr *addrp, struct in6_addr *maskp)
     }
 
     free(str);
-}*/
-
+}
+*/
 
 const char *
 ofputil_flow_format_to_string(enum ofp_ext_flow_format flow_format)

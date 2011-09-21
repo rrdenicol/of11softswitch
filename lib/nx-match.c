@@ -35,39 +35,19 @@
 #define LOG_MODULE VLM_nx_match
 
 
-/* For each NXM_* field, define NFI_NXM_* as consecutive integers starting from
+/* For each TLV_* field, define NFI_TLV_* as consecutive integers starting from
  * zero. */
 enum nxm_field_index {
 #define DEFINE_FIELD(HEADER, WILDCARD, DL_TYPES, NW_PROTO) \
-        NFI_NXM_##HEADER,
+        NFI_TLV_##HEADER,
 #include "nx-match.def"
-    N_NXM_FIELDS
-};
-
-struct nxm_field {
-    struct hmap_node hmap_node;
-    enum nxm_field_index index;       /* NFI_* value. */
-    uint32_t header;                  /* NXM_* value. */
-    unsigned int wildcard;            /* FWW_* bit, if exactly one. */
-    uint16_t dl_type[N_NXM_DL_TYPES]; /* dl_type prerequisites. */
-    uint8_t nw_proto;                 /* nw_proto prerequisite, if nonzero. */
-    const char *name;                 /* "NXM_*" string. */
+    N_TLV_FIELDS
 };
 
 
-/* All the known fields. */
-static struct nxm_field nxm_fields[N_NXM_FIELDS] = {
-#define DEFINE_FIELD(HEADER, WILDCARD, DL_TYPES, NW_PROTO)     \
-    { HMAP_NODE_NULL_INITIALIZER, NFI_NXM_##HEADER, NXM_##HEADER, WILDCARD, \
-        DL_CONVERT DL_TYPES, NW_PROTO, "NXM_" #HEADER},
-#define DL_CONVERT(T1, T2) { CONSTANT_HTONS(T1), CONSTANT_HTONS(T2) }
-#include "nx-match.def"
-};
 
-/* Hash table of 'nxm_fields'. */
-static struct hmap all_nxm_fields = HMAP_INITIALIZER(&all_nxm_fields);
 
-/* Possible masks for NXM_OF_ETH_DST_W. */
+/* Possible masks for TLV_EXT_DL_DST_W. */
 static const uint8_t eth_all_0s[ETH_ADDR_LEN]
     = {0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
 static const uint8_t eth_all_1s[ETH_ADDR_LEN]
@@ -78,348 +58,170 @@ static const uint8_t eth_mcast_0[ETH_ADDR_LEN]
     = {0xfe, 0xff, 0xff, 0xff, 0xff, 0xff};
 
 static void
-nxm_init(void)
-{
-    if (hmap_is_empty(&all_nxm_fields)) {
-        int i;
-
-        for (i = 0; i < N_NXM_FIELDS; i++) {
-            struct nxm_field *f = &nxm_fields[i];
-            hmap_insert(&all_nxm_fields, &f->hmap_node,
-                        hash_int(f->header, 0));
-        }
-
-        /* Verify that the header values are unique (duplicate "case" values
-         * cause a compile error). */
-        switch (0) {
-#define DEFINE_FIELD(HEADER, WILDCARD, DL_TYPE, NW_PROTO)  \
-        case NXM_##HEADER: break;
-#include "nx-match.def"
-        }
-    }
-}
+mod_match(struct hmap * flow ){
 
 
-
-static const struct nxm_field *
-nxm_field_lookup(uint32_t header)
-{
     struct nxm_field *f;
-
-    nxm_init();
-
-    HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(header, 0),
-                             &all_nxm_fields) {
-        if (f->header == header) {
-            return f;
+    uint16_t *dl_type;
+    uint16_t *dl_type_m;
+    uint8_t *nw_proto ;
+    uint8_t *nw_proto_m ;
+       
+    HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_DL_TYPE, 0),
+          flow) {
+            dl_type = (uint16_t*) f->value;
+            dl_type_m = (uint16_t*) f->mask;
+        
+            
+            if( (*dl_type & *dl_type_m) == 0){
+              
+                *dl_type = 0x0000;
+                 f->value = (uint8_t*) dl_type;
+            }
+    }    
+    /* IPv4 / ARP */
+    if (*dl_type != ETH_TYPE_IP && *dl_type != ETH_TYPE_ARP) {
+                  
+        HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_NW_TOS, 0),
+            flow) {
+                    
+            uint16_t *nw_tos = malloc (sizeof(uint16_t));
+            uint16_t *nw_tos_m = malloc (sizeof(uint16_t)); 
+            *nw_tos = 0x00;
+            *nw_tos_m = 0xff;
+            f->value = (uint8_t*) nw_tos;
+            f->mask = (uint8_t*) nw_tos_m;
         }
+        HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_NW_PROTO, 0),
+                    flow) {
+            
+            nw_proto = malloc (sizeof(uint8_t));
+            nw_proto_m = malloc (sizeof(uint8_t));        
+            *nw_proto = 0x0000;
+            *nw_proto_m = 0xff;
+            f->value = (uint8_t*) nw_proto;
+            f->mask = (uint8_t*) nw_proto_m;
+        }
+                
+        HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_IP_SRC, 0),
+                flow) {
+            uint32_t *ip_src = malloc (sizeof(int));
+            uint32_t *ip_src_m = malloc (sizeof(int)); 
+            *ip_src = 0x00000000;
+            *ip_src_m = 0xffffffff;
+            f->value = (uint8_t*) ip_src;
+            f->mask = (uint8_t*) ip_src_m;
+        }
+        
+        HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_IP_DST, 0),
+                flow) {
+                    
+            uint32_t *ip_dst = malloc (sizeof(int)); 
+            uint32_t *ip_dst_m = malloc (sizeof(int));;
+            *ip_dst = 0x00000000;
+            *ip_dst_m = 0xffffffff;
+            f->value = (uint8_t*) ip_dst;
+            f->mask = (uint8_t*) ip_dst_m;
+        }                          
+                 
     }
+    /* Transport */ 
+    HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_NW_PROTO, 0),
+               flow) {
+                      
+        nw_proto =  f->value;
+    }                
+        
+    if (*nw_proto != IP_TYPE_ICMP && *nw_proto != IP_TYPE_TCP &&
+        *nw_proto != IP_TYPE_UDP  && *nw_proto != IP_TYPE_SCTP) {
 
-    return NULL;
+        HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_TP_SRC, 0),
+                flow) {
+            uint16_t *tp_src = malloc (sizeof(uint16_t)); 
+            uint16_t *tp_src_m = malloc (sizeof(uint16_t));
+            *tp_src = 0x0000;
+            *tp_src_m = 0xffff;
+            f->value = (uint8_t*) tp_src;
+            f->mask = (uint8_t*) tp_src_m;
+        }
+                        
+        HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_TP_DST, 0),
+                flow) {
+            uint16_t *tp_dst = malloc (sizeof(uint16_t)); 
+            uint16_t *tp_dst_m = malloc (sizeof(uint16_t));
+            *tp_dst = 0x0000;
+            *tp_dst_m = 0xffff;
+            f->value = (uint8_t*) tp_dst;
+            f->mask = (uint8_t*) tp_dst_m;
+                        
+         }        
+                    
+    }
+            
+     /* MPLS */
+    if (*dl_type != ETH_TYPE_MPLS && *dl_type != ETH_TYPE_MPLS_MCAST) {
+          
+        HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_MPLS_LABEL, 0),
+                flow) {
+            uint32_t *mpls_label = malloc (sizeof(uint16_t)); 
+            uint32_t *mpls_label_m = malloc (sizeof(uint16_t));
+            *mpls_label = 0x00000000;
+            *mpls_label_m = 0xffffffff;
+            f->value = (uint8_t*) mpls_label;
+            f->mask = (uint8_t*) *mpls_label_m;
+        }
+                        
+        HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_MPLS_TC, 0),
+                flow) {
+            uint16_t *mpls_tc = malloc (sizeof(uint16_t)); 
+            uint16_t *mpls_tc_m = malloc (sizeof(uint16_t));
+            *mpls_tc = 0x0000;
+            *mpls_tc_m = 0xffff;
+            f->value = (uint8_t*) mpls_tc;
+            f->mask = (uint8_t*) mpls_tc_m;
+                        
+         }              
+                         
+    }
+                         
 }
+   
 
-
-static int
-parse_nxm_entry(struct flex_array * entry, const struct nxm_field *f,
-                const void *value, const void *mask)
+int 
+ext_pull_match(struct ofl_ext_match *match_src, struct hmap * match_dst)
 {
 
-    switch (f->index) {
-        /* Metadata. */
-    case NFI_NXM_OF_IN_PORT:{
-        const uint8_t *p = (const uint8_t *) value;    
-        ext_put_32(entry, NXM_OF_IN_PORT, (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3]);
-        return 0;
-    }
-
-        /* Ethernet header. 
-   case NFI_NXM_OF_ETH_DST:
-        if ((wc->wildcards & (FWW_DL_DST | FWW_ETH_MCAST))
-            != (FWW_DL_DST | FWW_ETH_MCAST)) {
-            return NXM_DUP_TYPE;
-        } else {
-            wc->wildcards &= ~(FWW_DL_DST | FWW_ETH_MCAST);
-            memcpy(flow->dl_dst, value, ETH_ADDR_LEN);
-            return 0;
-        }
-    case NFI_NXM_OF_ETH_DST_W:
-        if ((wc->wildcards & (FWW_DL_DST | FWW_ETH_MCAST))
-            != (FWW_DL_DST | FWW_ETH_MCAST)) {
-            return NXM_DUP_TYPE;
-        } else if (eth_addr_equals(mask, eth_mcast_1)) {
-            wc->wildcards &= ~FWW_ETH_MCAST;
-            flow->dl_dst[0] = *(uint8_t *) value & 0x01;
-            return 0;
-        } else if (eth_addr_equals(mask, eth_mcast_0)) {
-            wc->wildcards &= ~FWW_DL_DST;
-            memcpy(flow->dl_dst, value, ETH_ADDR_LEN);
-            flow->dl_dst[0] &= 0xfe;
-            return 0;
-        } else if (eth_addr_equals(mask, eth_all_0s)) {
-            return 0;
-        } else if (eth_addr_equals(mask, eth_all_1s)) {
-            wc->wildcards &= ~(FWW_DL_DST | FWW_ETH_MCAST);
-            memcpy(flow->dl_dst, value, ETH_ADDR_LEN);
-            return 0;
-        } else {
-            return NXM_BAD_MASK;
-        }*/
-    case NFI_NXM_OF_ETH_SRC: {
-        const uint8_t *p = (const uint8_t *) value;
-        ext_put_eth(entry, NXM_OF_ETH_SRC, p);
-        return 0;
-    }
-    case NFI_NXM_OF_ETH_TYPE: {      
-        const uint16_t *p = (const uint16_t *) value;
-        ext_put_16(entry, NXM_OF_ETH_TYPE, ntohs(*p));
-        return 0;
-    }
-        /* 802.1Q header. */
-   /* case NFI_NXM_OF_VLAN_TCI:
-        if (wc->vlan_tci_mask) {
-            return NXM_DUP_TYPE;
-        } else {
-            cls_rule_set_dl_tci(rule, get_unaligned_be16(value));
-            return 0;
-        }
-    case NFI_NXM_OF_VLAN_TCI_W:
-        if (wc->vlan_tci_mask) {
-            return NXM_DUP_TYPE;
-        } else {
-            cls_rule_set_dl_tci_masked(rule, get_unaligned_be16(value),
-                                       get_unaligned_be16(mask));
-            return 0;
-        }
-
-        /* IP header. */
- /*   case NFI_NXM_OF_IP_TOS:
-        if (*(uint8_t *) value & 0x03) {
-            return NXM_BAD_VALUE;
-        } else {
-            flow->nw_tos = *(uint8_t *) value;
-            return 0;
-        }
-    case NFI_NXM_OF_IP_PROTO:
-        flow->nw_proto = *(uint8_t *) value;
-        return 0;
-
-        /* IP addresses in IP and ARP headers. */
-   /* case NFI_NXM_OF_IP_SRC:
-    case NFI_NXM_OF_ARP_SPA:
-        if (wc->nw_src_mask) {
-            return NXM_DUP_TYPE;
-        } else {
-            cls_rule_set_nw_src(rule, get_unaligned_be32(value));
-            return 0;
-        }
-    case NFI_NXM_OF_IP_SRC_W:
-    case NFI_NXM_OF_ARP_SPA_W:
-        if (wc->nw_src_mask) {
-            return NXM_DUP_TYPE;
-        } else {
-            ovs_be32 ip = get_unaligned_be32(value);
-            ovs_be32 netmask = get_unaligned_be32(mask);
-            if (!cls_rule_set_nw_src_masked(rule, ip, netmask)) {
-                return NXM_BAD_MASK;
-            }
-            return 0;
-        }
-    case NFI_NXM_OF_IP_DST:
-    case NFI_NXM_OF_ARP_TPA:
-        if (wc->nw_dst_mask) {
-            return NXM_DUP_TYPE;
-        } else {
-            cls_rule_set_nw_dst(rule, get_unaligned_be32(value));
-            return 0;
-        }
-    case NFI_NXM_OF_IP_DST_W:
-    case NFI_NXM_OF_ARP_TPA_W:
-        if (wc->nw_dst_mask) {
-            return NXM_DUP_TYPE;
-        } else {
-            ovs_be32 ip = get_unaligned_be32(value);
-            ovs_be32 netmask = get_unaligned_be32(mask);
-            if (!cls_rule_set_nw_dst_masked(rule, ip, netmask)) {
-                return NXM_BAD_MASK;
-            }
-            return 0;
-        }*/
-
-        /* IPv6 addresses. */
-    /*case NFI_NXM_NX_IPV6_SRC:
-        if (!ipv6_mask_is_any(&wc->ipv6_src_mask)) {
-            return NXM_DUP_TYPE;
-        } else {
-            struct in6_addr ipv6;
-            memcpy(&ipv6, value, sizeof ipv6);
-            cls_rule_set_ipv6_src(rule, &ipv6);
-            return 0;
-        }
-    case NFI_NXM_NX_IPV6_SRC_W:
-        if (!ipv6_mask_is_any(&wc->ipv6_src_mask)) {
-            return NXM_DUP_TYPE;
-        } else {
-            struct in6_addr ipv6, netmask;
-            memcpy(&ipv6, value, sizeof ipv6);
-            memcpy(&netmask, mask, sizeof netmask);
-            if (!cls_rule_set_ipv6_src_masked(rule, &ipv6, &netmask)) {
-                return NXM_BAD_MASK;
-            }
-            return 0;
-        }
-    case NFI_NXM_NX_IPV6_DST:
-        if (!ipv6_mask_is_any(&wc->ipv6_dst_mask)) {
-            return NXM_DUP_TYPE;
-        } else {
-            struct in6_addr ipv6;
-            memcpy(&ipv6, value, sizeof ipv6);
-            cls_rule_set_ipv6_dst(rule, &ipv6);
-            return 0;
-        }
-    case NFI_NXM_NX_IPV6_DST_W:
-        if (!ipv6_mask_is_any(&wc->ipv6_dst_mask)) {
-            return NXM_DUP_TYPE;
-        } else {
-            struct in6_addr ipv6, netmask;
-            memcpy(&ipv6, value, sizeof ipv6);
-            memcpy(&netmask, mask, sizeof netmask);
-            if (!cls_rule_set_ipv6_dst_masked(rule, &ipv6, &netmask)) {
-                return NXM_BAD_MASK;
-            }
-            return 0;
-        }
-
-        /* TCP header. */
-  /*  case NFI_NXM_OF_TCP_SRC:
-        flow->tp_src = get_unaligned_be16(value);
-        return 0;
-    case NFI_NXM_OF_TCP_DST:
-        flow->tp_dst = get_unaligned_be16(value);
-        return 0;
-
-        /* UDP header. */
-   /* case NFI_NXM_OF_UDP_SRC:
-        flow->tp_src = get_unaligned_be16(value);
-        return 0;
-    case NFI_NXM_OF_UDP_DST:
-        flow->tp_dst = get_unaligned_be16(value);
-        return 0;
-
-        /* ICMP header. */
-   /* case NFI_NXM_OF_ICMP_TYPE:
-        flow->tp_src = htons(*(uint8_t *) value);
-        return 0;
-    case NFI_NXM_OF_ICMP_CODE:
-        flow->tp_dst = htons(*(uint8_t *) value);
-        return 0;
-
-        /* ICMPv6 header. */
-   /* case NFI_NXM_NX_ICMPV6_TYPE:
-        flow->tp_src = htons(*(uint8_t *) value);
-        return 0;
-    case NFI_NXM_NX_ICMPV6_CODE:
-        flow->tp_dst = htons(*(uint8_t *) value);
-        return 0;
-
-        /* IPv6 Neighbor Discovery. */
-   /*  case NFI_NXM_NX_ND_TARGET:
-        /* We've already verified that it's an ICMPv6 message. */
-    /*     if ((flow->tp_src != htons(ND_NEIGHBOR_SOLICIT)) 
-                    && (flow->tp_src != htons(ND_NEIGHBOR_ADVERT))) {
-            return NXM_BAD_PREREQ;
-        }
-        memcpy(&flow->nd_target, value, sizeof flow->nd_target);
-        return 0;
-    case NFI_NXM_NX_ND_SLL:
-        /* We've already verified that it's an ICMPv6 message. */
-   /*      if (flow->tp_src != htons(ND_NEIGHBOR_SOLICIT)) {
-            return NXM_BAD_PREREQ;
-        }
-        memcpy(flow->arp_sha, value, ETH_ADDR_LEN);
-        return 0;
-    case NFI_NXM_NX_ND_TLL:
-        /* We've already verified that it's an ICMPv6 message. */
-    /*     if (flow->tp_src != htons(ND_NEIGHBOR_ADVERT)) {
-            return NXM_BAD_PREREQ;
-        }
-        memcpy(flow->arp_tha, value, ETH_ADDR_LEN);
-        return 0;
-
-        /* ARP header. */
-   /*  case NFI_NXM_OF_ARP_OP:
-        if (ntohs(get_unaligned_be16(value)) > 255) {
-            return NXM_BAD_VALUE;
-        } else {
-            flow->nw_proto = ntohs(get_unaligned_be16(value));
-            return 0;
-        }
-
-    case NFI_NXM_NX_ARP_SHA:
-        memcpy(flow->arp_sha, value, ETH_ADDR_LEN);
-        return 0;
-    case NFI_NXM_NX_ARP_THA:
-        memcpy(flow->arp_tha, value, ETH_ADDR_LEN);
-        return 0;*/
-    case N_NXM_FIELDS:
-        NOT_REACHED();
-    }
-    NOT_REACHED();
-}
-
-/*int
-nx_ntoh(struct ext_match *match_src, struct ofl_ext_match * match_dst, unsigned int match_len)
-{
-    uint32_t header;
-    uint8_t *p =  match_src->match_fields.entries;
+    uint32_t header, match_len;
     
+    uint8_t *p =  match_src->match_fields.entries;
     if (!p) {
         return 1;
     }
-    flex_array_init(&match_dst->match_fields);
+    match_len = match_src->match_fields.size;
     while ((header = ext_entry_ok(p, match_len)) != 0) {
+        struct nxm_field *f = (struct nxm_field *) malloc(sizeof(struct nxm_field)); 
         unsigned length = NXM_LENGTH(header);
-        const struct nxm_field *f;
-        int error;
-        f = nxm_field_lookup(header);
-        if (!f) {
-            error = 1;
-        } else {
-            /* 'hasmask' and 'length' are known to be correct at this point
-             * because they are included in 'header' and nxm_field_lookup()
-             * checked them already. 
-            error = parse_nxm_entry(&match_dst->match_fields, f, p + 4, p + 4 + length / 2);
+        f->header = header;
+        f->value = p + 4;
+        if (NXM_HASMASK(header)){
+            f->mask = p + 4 + length / 2;
+            f->header = NXM_HEADER( NXM_VENDOR(header), NXM_FIELD(header), NXM_LENGTH(header)/2);
         }
-        if (error) {
-            VLOG_DBG(LOG_MODULE, "bad nxm_entry with vendor=%"PRIu32", "
-                        "field=%"PRIu32", hasmask=%"PRIu32", type=%"PRIu32" "
-                        "(error %x)",
-                        NXM_VENDOR(header), NXM_FIELD(header),
-                        NXM_HASMASK(header), NXM_TYPE(header),
-                        error);
-            return error;
-        }
-
+        else {
+            f->mask = malloc(length);
+            memset(f->mask,0x0,length);
+            }
+        f->length = length;    
+        hmap_insert(match_dst, &f->hmap_node,
+                        hash_int(f->header, 0));
+    
 
         p += 4 + length;
         match_len -= 4 + length;
     }
-
+    mod_match(match_dst);
+    
     return match_len ? 1 : 0;
-}*/
-
-int
-nxm_field_bytes(uint32_t header)
-{
-    unsigned int length = NXM_LENGTH(header);
-    return NXM_HASMASK(header) ? length / 2 : length;
-}
-
-/* Returns the width of the data for a field with the given 'header', in
- * bits. */
-int
-nxm_field_bits(uint32_t header)
-{
-    return nxm_field_bytes(header) * 8;
 }
 
 /* nx_pull_match() and helpers. */
@@ -476,6 +278,16 @@ ext_put_8(struct flex_array *f, uint32_t header, uint8_t value)
 }
 
 void
+ext_put_8w(struct flex_array *f, uint32_t header, uint8_t value, uint16_t mask){
+
+    ext_put_header(f, header);
+    flex_array_put(f, &value, sizeof value);
+    flex_array_put(f, &mask, sizeof mask);
+    f->total++;
+
+}
+
+void
 ext_put_16(struct flex_array *f, uint32_t header, uint16_t value)
 {
     ext_put_header(f, header);
@@ -486,6 +298,7 @@ ext_put_16(struct flex_array *f, uint32_t header, uint16_t value)
 void
 ext_put_16w(struct flex_array *f, uint32_t header, uint16_t value, uint16_t mask)
 {
+
     ext_put_header(f, header);
     flex_array_put(f, &value, sizeof value);
     flex_array_put(f, &mask, sizeof mask);
@@ -521,6 +334,7 @@ ext_put_32(struct flex_array *f, uint32_t header, uint32_t value)
 void
 ext_put_32w(struct flex_array *f, uint32_t header, uint32_t value, uint32_t mask)
 {
+    
     ext_put_header(f, header);
     flex_array_put(f, &value, sizeof value);
     flex_array_put(f, &mask, sizeof mask);
@@ -623,25 +437,5 @@ nxm_put_ipv6(struct ofpbuf *b, uint32_t header,
     }
 }*/
 
-/*
-int 
-ext_pull_match(struct ofpbuf *, unsigned int match_len, uint16_t priority){
 
-
-}*/
-
-static uint32_t
-parse_nxm_field_name(const char *name, int name_len)
-{
-    const struct nxm_field *f;
-
-    /* Check whether it's a field name. */
-    for (f = nxm_fields; f < &nxm_fields[ARRAY_SIZE(nxm_fields)]; f++) {
-        if (!strncmp(f->name, name, name_len) && f->name[name_len] == '\0') {
-            return f->header;
-        }
-    }
-
-    return 0;
-}
 

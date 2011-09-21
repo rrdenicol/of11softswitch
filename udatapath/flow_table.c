@@ -78,24 +78,26 @@ flow_table_add(struct flow_table *table, struct ofl_msg_flow_mod *mod, bool chec
         if (check_overlap && flow_entry_overlaps(entry, mod)) {
             return ofl_error(OFPET_FLOW_MOD_FAILED, OFPFMFC_OVERLAP);
         }
+        if (entry->match->type == OFPMT_STANDARD){    
+            /* if the entry equals, replace the old one */
+            if (flow_entry_matches(entry, mod, true, false/*check_cookie*/)) {
+                new_entry = flow_entry_create(table->dp, table, mod);
+                *match_kept = true;
+                *insts_kept = true;
 
-        /* if the entry equals, replace the old one */
-        if (flow_entry_matches(entry, mod, true)) {
-            new_entry = flow_entry_create(table->dp, table, mod);
-            *match_kept = true;
-            *insts_kept = true;
-
-            /* NOTE: no flow removed message should be generated according to spec. */
-            list_replace(&new_entry->match_node, &entry->match_node);
-            list_remove(&entry->hard_node);
-            list_remove(&entry->idle_node);
-            flow_entry_destroy(entry);
-            add_to_timeout_lists(table, new_entry);
-            return 0;
-        }
-
-        if (mod->priority < entry->stats->priority) {
-            break;
+                /* NOTE: no flow removed message should be generated according to spec. */
+                list_replace(&new_entry->match_node, &entry->match_node);
+                list_remove(&entry->hard_node);
+                list_remove(&entry->idle_node);
+                flow_entry_destroy(entry);
+                add_to_timeout_lists(table, new_entry);
+                return 0;
+            }
+        
+        
+            if (mod->priority < entry->stats->priority) {
+                break;
+            }
         }
     }
 
@@ -119,29 +121,39 @@ static ofl_err
 flow_table_ext_add(struct flow_table *table, struct ofl_ext_flow_mod *mod, bool check_overlap, bool *match_kept, bool *insts_kept) {
     // Note: new entries will be placed behind those with equal priority
     struct flow_entry *entry, *new_entry;
-
+    int i = 0;
     LIST_FOR_EACH (entry, struct flow_entry, match_node, &table->match_entries) {
-        if (check_overlap && flow_entry_overlaps(entry, mod)) {
+        
+        /*TODO Check overlaps 
+        if (check_overlap && ext_flow_entry_overlaps(entry, mod)) {
             return ofl_error(OFPET_FLOW_MOD_FAILED, OFPFMFC_OVERLAP);
-        }
+        }*/
+        
+        printf("TYPE %d\n", entry->match->type );
+        if (entry->match->type == EXT_MATCH){
+            i++;
+            printf("TOTAL %d\n", i);
+            /* if the entry equals, replace the old one */
+            if (ext_flow_entry_matches(entry, mod, true, false/*check_cookie*/)) {
+                printf("EQUALS\n");
+                new_entry = ext_flow_entry_create(table->dp, table, mod);
+                *match_kept = true;
+                *insts_kept = true;
 
-        /* if the entry equals, replace the old one */
-        if (flow_entry_matches(entry, mod, true)) {
-            new_entry = flow_entry_create(table->dp, table, mod);
-            *match_kept = true;
-            *insts_kept = true;
-
-            /* NOTE: no flow removed message should be generated according to spec. */
-            list_replace(&new_entry->match_node, &entry->match_node);
-            list_remove(&entry->hard_node);
-            list_remove(&entry->idle_node);
-            flow_entry_destroy(entry);
-            add_to_timeout_lists(table, new_entry);
-            return 0;
-        }
-
-        if (mod->priority < entry->stats->priority) {
-            break;
+                /* NOTE: no flow removed message should be generated according to spec. */
+                list_replace(&new_entry->match_node, &entry->match_node);
+                list_remove(&entry->hard_node);
+                list_remove(&entry->idle_node);
+                flow_entry_destroy(entry);
+                add_to_timeout_lists(table, new_entry);
+                return 0;
+            }
+        
+        
+            if (mod->priority < entry->stats->priority) {
+                break;
+            }
+    
         }
     }
 
@@ -150,7 +162,7 @@ flow_table_ext_add(struct flow_table *table, struct ofl_ext_flow_mod *mod, bool 
     }
     table->stats->active_count++;
 
-    new_entry = flow_entry_create(table->dp, table, mod);
+    new_entry = ext_flow_entry_create(table->dp, table, mod);
     *match_kept = true;
     *insts_kept = true;
 
@@ -169,7 +181,7 @@ flow_table_modify(struct flow_table *table, struct ofl_msg_flow_mod *mod, bool s
     match_found = false;
 
     LIST_FOR_EACH (entry, struct flow_entry, match_node, &table->match_entries) {
-        if (flow_entry_matches(entry, mod, strict)) {
+        if (flow_entry_matches(entry, mod, strict, true/*check_cookie*/)) {
             flow_entry_replace_instructions(entry, mod->instructions_num, mod->instructions);
             *insts_kept = true;
             match_found = true;
@@ -184,13 +196,37 @@ flow_table_modify(struct flow_table *table, struct ofl_msg_flow_mod *mod, bool s
     return 0;
 }
 
+/* Handles flow mod messages with MODIFY command. */
+static ofl_err
+flow_table_ext_modify(struct flow_table *table, struct ofl_ext_flow_mod *mod, bool strict, bool *match_kept, bool *insts_kept) {
+    struct flow_entry *entry;
+    bool match_found;
+
+    match_found = false;
+
+    LIST_FOR_EACH (entry, struct flow_entry, match_node, &table->match_entries) {
+        if (ext_flow_entry_matches(entry, mod, strict, true/*check_cookie*/)) {
+            flow_entry_replace_instructions(entry, mod->instructions_num, mod->instructions);
+            *insts_kept = true;
+            match_found = true;
+        }
+    }
+
+    /* NOTE: if modify does not modify any entries, it acts like an add according to spec. */
+    if (!match_found) {
+        return flow_table_ext_add(table, mod, false, match_kept, insts_kept);
+    }
+
+    return 0;
+}
+
 /* Handles flow mod messages with DELETE command. */
 static ofl_err
 flow_table_delete(struct flow_table *table, struct ofl_msg_flow_mod *mod, bool strict) {
     struct flow_entry *entry, *next;
 
     LIST_FOR_EACH_SAFE (entry, next, struct flow_entry, match_node, &table->match_entries) {
-        if (flow_entry_matches(entry, mod, strict)) {
+        if (flow_entry_matches(entry, mod, strict, true /*check_cookie*/)) {
             flow_entry_remove(entry, OFPRR_DELETE);
         }
     }
@@ -198,6 +234,19 @@ flow_table_delete(struct flow_table *table, struct ofl_msg_flow_mod *mod, bool s
     return 0;
 }
 
+/* Handles flow mod messages with DELETE command. */
+static ofl_err
+flow_table_ext_delete(struct flow_table *table, struct ofl_ext_flow_mod *mod, bool strict) {
+    struct flow_entry *entry, *next;
+
+    LIST_FOR_EACH_SAFE (entry, next, struct flow_entry, match_node, &table->match_entries) {
+        if (ext_flow_entry_matches(entry, mod, strict, true/*check_cookie*/)) {
+            flow_entry_remove(entry, OFPRR_DELETE);
+        }
+    }
+
+    return 0;
+}
 
 ofl_err
 flow_table_flow_mod(struct flow_table *table, struct ofl_msg_header *mod, bool *match_kept, bool *insts_kept) {
@@ -231,19 +280,19 @@ flow_table_flow_mod(struct flow_table *table, struct ofl_msg_header *mod, bool *
         switch (fm->command) {
             case (OFPFC_ADD): {
                 bool overlap = ((fm->flags & OFPFF_CHECK_OVERLAP) != 0);
-                return flow_table_add(table, fm, overlap, match_kept, insts_kept);
+                return flow_table_ext_add(table, fm, overlap, match_kept, insts_kept);
             }
             case (OFPFC_MODIFY): {
-                return flow_table_modify(table, fm, false, match_kept, insts_kept);
+                return flow_table_ext_modify(table, fm, false, match_kept, insts_kept);
             }
             case (OFPFC_MODIFY_STRICT): {
-                return flow_table_modify(table, fm, true, match_kept, insts_kept);
+                return flow_table_ext_modify(table, fm, true, match_kept, insts_kept);
             }
             case (OFPFC_DELETE): {
-                return flow_table_delete(table, fm, false);
+                return flow_table_ext_delete(table, fm, false);
             }
             case (OFPFC_DELETE_STRICT): {
-                return flow_table_delete(table, fm, true);
+                return flow_table_ext_delete(table, fm, true);
             }
             default: {
                 return ofl_error(OFPET_FLOW_MOD_FAILED, OFPFMFC_BAD_COMMAND);
@@ -285,7 +334,7 @@ flow_table_lookup(struct flow_table *table, struct packet *pkt) {
             case (EXT_MATCH): {
             
             
-            
+                break;
             
             
             }
