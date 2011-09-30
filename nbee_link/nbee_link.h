@@ -12,6 +12,7 @@
 #include <stdint.h>
 #include "../lib/list_t.h"
 #include "../lib/hmap.h"
+#include "../lib/ofpbuf.h"
 
 #define ETHADDLEN 6
 #define IPV6ADDLEN 16
@@ -24,18 +25,6 @@ typedef struct pcap_pkthdr {
 	uint32_t caplen;	/* length of portion present */
 	uint32_t len;	/* length this packet (off wire) */
 }pcap_pkthdr_t;
-
-struct ethernetpkt {
-	short ethdst[ETHADDLEN];
-	short ethsrc[ETHADDLEN];
-	short ethtype[ETHTYPELEN];
-};
-
-struct ipv6pkt {
-	short ipv6dst[IPV6ADDLEN];
-	short ipv6src[IPV6ADDLEN];
-
-};
 
 typedef struct field_values {
        list_t list_node;
@@ -56,6 +45,6 @@ int nbee_link_initialize();
 #ifdef __cplusplus
 extern "C"
 #endif
-int nbee_link_convertpkt(const unsigned char* pkt_in, struct hmap * pkt_out);
+int nbee_link_convertpkt(struct ofpbuf * pkt_in, struct hmap * pkt_out);
 
 #endif /* NBEE_LINK_H_ */

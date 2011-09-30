@@ -59,6 +59,7 @@ OFP_CHECK_HWLIBS
 AC_SYS_LARGEFILE
 
 AC_CHECK_LIB(nbeelink,nbee_link_initialize)
+#AC_CHECK_LIB(nbee,nbGetLastError)
 
 AC_CHECK_FUNCS([strsignal])
 

@@ -15,7 +15,7 @@
 /* The data associated with the handler */
 struct packet_handle_ext {
     struct packet              *pkt;
-    struct hmap                *fields; /* All fields extracted from the packet
+    struct hmap                fields; /* All fields extracted from the packet
 					    	*/
     bool                        valid; /* Set to true if the handler data is valid.
                                             if false, it is revalidated before
