@@ -73,7 +73,7 @@ mod_match(struct hmap * flow ){
             dl_type_m = (uint16_t*) f->mask;
         
             
-            if( (*dl_type & *dl_type_m) == 0){
+            if( (*dl_type & ~(*dl_type_m)) == 0){
               
                 *dl_type = 0x0000;
                  f->value = (uint8_t*) dl_type;
@@ -206,18 +206,21 @@ ext_pull_match(struct ofl_ext_match *match_src, struct hmap * match_dst)
         if (NXM_HASMASK(header)){
             f->mask = p + 4 + length / 2;
             f->header = NXM_HEADER( NXM_VENDOR(header), NXM_FIELD(header), NXM_LENGTH(header)/2);
+             f->length = length/2;
         }
         else {
             f->mask = malloc(length);
             memset(f->mask,0x0,length);
-            }
-        f->length = length;    
+            f->length = length;
+            
+            }      
         hmap_insert(match_dst, &f->hmap_node,
                         hash_int(f->header, 0));
+                        
     
-
         p += 4 + length;
         match_len -= 4 + length;
+        
     }
     mod_match(match_dst);
     
@@ -371,6 +374,16 @@ ext_put_64w(struct flex_array *f, uint32_t header, uint64_t value, uint64_t mask
     flex_array_put(f, &value, sizeof value);
     flex_array_put(f, &mask, sizeof mask);
 }
+
+void ext_put_ipv6(struct flex_array *f, uint32_t header,
+                    const struct in6_addr *value, const struct in6_addr *mask){
+      
+    ext_put_header(f, header);
+    flex_array_put(f, value, sizeof( struct in6_addr));
+    flex_array_put(f, mask, sizeof (struct in6_addr));
+    f->total++;
+}              
+                           
 
 void
 ext_put_64m(struct flex_array *f, uint32_t header, uint64_t value, uint64_t mask)

@@ -7,6 +7,8 @@
 #include "packets.h"
 #include "oflib/ofl-structs.h"
 #include "nbee_link/nbee_link.h"
+#include "flow_hmap.h"
+
 
 /****************************************************************************
  * A handler processing a datapath packet for standard matches.
@@ -40,7 +42,7 @@ packet_handle_ext_is_fragment(struct packet_handle_ext *handle);
 
 /* Returns true if the packet matches the given standard match structure. */
 bool
-packet_handle_ext_match(struct packet_handle_ext *handle, struct ofl_match_standard *match);
+packet_handle_ext_match(struct packet_handle_ext *handle, struct flow_hmap *match);
 
 /* Converts the packet to a string representation */
 char *
@@ -54,7 +56,7 @@ struct packet_handle_ext *
 packet_handle_ext_clone(struct packet *pkt, struct packet_handle_ext *handle);
 
 /* Revalidates the handler data */
-void
+int
 packet_handle_ext_validate(struct packet_handle_ext *handle);
 
 

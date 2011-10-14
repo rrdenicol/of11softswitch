@@ -77,6 +77,10 @@ flow_table_create(struct datapath *dp, uint8_t table_id);
 void
 flow_table_destroy(struct flow_table *table);
 
+void
+ext_flow_table_stats(struct flow_table *table, struct ofl_ext_flow_stats_request *msg,
+                 struct ofl_flow_stats ***stats, size_t *stats_size, size_t *stats_num); 
+
 /* Collects statistics of the flow entries of the table. */
 void
 flow_table_stats(struct flow_table *table, struct ofl_msg_stats_request_flow *msg,

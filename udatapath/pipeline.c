@@ -220,7 +220,7 @@ pipeline_handle_ext_flow_mod(struct pipeline *pl, struct ofl_ext_flow_mod *msg,
             return ofl_error(OFPET_FLOW_MOD_FAILED, OFPFMFC_BAD_TABLE_ID);
         }
     } else {
-        error = flow_table_flow_mod(pl->tables[msg->table_id], &msg->header, &match_kept, &insts_kept);
+        error = flow_table_flow_mod(pl->tables[msg->table_id], &msg->header.header.header, &match_kept, &insts_kept);
         if (error) {
             return error;
         }
@@ -330,6 +330,44 @@ pipeline_handle_table_mod(struct pipeline *pl,
     ofl_msg_free((struct ofl_msg_header *)msg, pl->dp->exp);
     return 0;
 }
+
+/* Handle an extended flow stats request. */
+ofl_err
+pipeline_ext_handle_stats_request_flow(struct pipeline *pl,
+                                   struct ofl_ext_flow_stats_request *msg,
+                                   const struct sender *sender){
+                                   
+    struct ofl_flow_stats **stats = xmalloc(sizeof(struct ofl_flow_stats *));
+    size_t stats_size = 1;
+    size_t stats_num = 0;
+
+    if (msg->table_id == 0xff) {
+        size_t i;
+        for (i=0; i<PIPELINE_TABLES; i++) {
+            flow_table_stats(pl->tables[i], msg, &stats, &stats_size, &stats_num);
+        }
+    } else {
+        flow_table_stats(pl->tables[msg->table_id], msg, &stats, &stats_size, &stats_num);
+    }
+
+    {
+        struct ofl_msg_stats_reply_flow reply =
+                {{{.type = OFPT_STATS_REPLY},
+                  .type = OFPST_FLOW, .flags = 0x0000},
+                 .stats     = stats,
+                 .stats_num = stats_num
+                };
+
+        dp_send_message(pl->dp, (struct ofl_msg_header *)&reply, sender);
+    }
+
+    free(stats);
+    ofl_msg_free((struct ofl_msg_header *)msg, pl->dp->exp);
+    return 0;
+
+
+}                                   
+                                   
 
 ofl_err
 pipeline_handle_stats_request_flow(struct pipeline *pl,

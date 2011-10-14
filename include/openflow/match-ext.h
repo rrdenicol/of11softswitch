@@ -346,29 +346,37 @@
 #define TLV_EXT_IPV6_TC NXM_HEADER (0x0002, 5, 1)
 #define TLV_EXT_IPV6_TC_W NXM_HEADER_W (0x0002, 5, 1)
 
-/* IPv6 Next Header Field*/
-#define TLV_EXT_IPV6_NH NXM_HEADER (0x0002,13,1) 
+/* IPv6 Hop-by-Hop EH ID*/
+#define TLV_EXT_IPV6_HBH_ID NXM_HEADER (0x0002, 8, 1) 
+
+#define TLV_EXT_IPV6_HBH_OPT_CODE NXM_HEADER (0x0002, 9, 1) 
+
+#define TLV_EXT_IPV6_HBH_OPT_VALUE NXM_HEADER_VL (0x0002, 10) 
+
+/* IPv6 Destination Option EH ID*/
+#define TLV_EXT_IPV6_DO_ID NXM_HEADER (0x0002, 16, 1)
+
+#define TLV_EXT_IPV6_DO_OPT_CODE NXM_HEADER (0x0002, 17, 1)
+
+#define TLV_EXT_IPV6_DO_OPT_VALUE NXM_HEADER_VL (0x0002, 18)
 
 
-/* IPv6 Hop-by-Hop EH */
-#define TLV_EXT_IPV6_HBH_ NXM_HEADER_VL (0x0002, 6) 
+/* IPv6 Routing EH ID*/ 
+#define TLV_EXT_IPV6_RH_ID NXM_HEADER (0x0002, 24, 1)
 
-/* IPv6 Destination Option EH */
-#define TLV_EXT_IPV6_DO_ NXM_HEADER_VL (0x0002, 7)
-/* IPv6 Routing EH*/ 
-#define TLV_EXT_IPV6_RH_ NXM_HEADER_VL (0x0002, 8)
+#define TLV_EXT_IPV6_RH_ADDRESS NXM_HEADER (0x0002, 25, 16)
 
-/* IPv6 Fragmentation EH*/
-#define TLV_EXT_IPV6_FRAG_ NXM_HEADER_VL (0x0002, 9)
+/* IPv6 Fragmentation EH ID*/
+#define TLV_EXT_IPV6_FRAG_ID NXM_HEADER (0x0002, 32, 1)
 
-/* IPv6 Fragmentation EH*/ 
-#define TLV_EXT_IPV6_AUTH_ NXM_HEADER_VL (0x0002, 10)
+/* IPv6 Authentication EH ID*/ 
+#define TLV_EXT_IPV6_AUTH_ID NXM_HEADER (0x0002, 40, 1)
 
 /* IPv6 Encapsulating Security Payload */ 
-#define TLV_EXT_IPV6_ESP_ NXM_HEADER_VL (0x0002, 11) 
+#define TLV_EXT_IPV6_ESP_ID NXM_HEADER (0x0002, 48, 1) 
 
 /* IPv6 Mobility EH */
-#define TLV_EXT_IPV6_MH_ NXM_HEADER_VL (0x0002,12) 
+#define TLV_EXT_IPV6_MH_ID NXM_HEADER (0x0002, 56, 1) 
 
 #define EXTENDED_MATCH_ID 0x00005678
 
@@ -380,7 +388,7 @@ struct ofp_ext_header{
 OFP_ASSERT(sizeof(struct ofp_ext_header) == 16);
 
 
-/* Values for the 'subtype' member of struct nicira_header. */
+/* Values for the 'subtype' member of struct ext_header. */
 enum ofp_ext_type {
 
     /* Flexible flow specification (aka NXM = Nicira Extended Match). */

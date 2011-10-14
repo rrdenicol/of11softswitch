@@ -141,7 +141,7 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
             uint32_t header;
             unsigned length;
             struct ofl_ext_match *m = (struct ofl_ext_match *)match;
-            void *p = m->match_fields.entries;
+            uint8_t *p = (uint8_t *) m->match_fields.entries;
             fprintf(stream, "extended_match{");
             for (i = 0; i < m->match_fields.total; i++){
 		        header = ext_entry_ok(p,m->match_fields.size);
@@ -244,6 +244,13 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
                         break;
                     
                     }
+                    /*case (TLV_EXT_IPV6_SRC): {
+                        uint32_t *value = p + 4;
+                        fprintf(stream, " nw_src_ipv6=\"%"PRIx32"\"", *value); 
+                        p += length + 4; 
+                        break;
+                    
+                    }*/
                     
                     
                 

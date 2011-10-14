@@ -27,8 +27,9 @@ typedef struct pcap_pkthdr {
 }pcap_pkthdr_t;
 
 typedef struct field_values {
-       list_t list_node;
-       uint8_t* value;
+        list_t list_node;
+	uint32_t len;
+        uint8_t* value;
 }field_values_t;
 
 typedef struct packet_fields{

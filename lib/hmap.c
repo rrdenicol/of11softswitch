@@ -41,6 +41,7 @@
 void
 hmap_init(struct hmap *hmap)
 {
+
     hmap->buckets = &hmap->one;
     hmap->one = NULL;
     hmap->mask = 0;

@@ -29,8 +29,8 @@
  * Author: Eder Leão Fernandes <zoltan.lajos.kis@ericsson.com>
  */
 
-#ifndef MATCH_EXT_H
-#define MATCH_EXT_H 1
+#ifndef MATCH_EXTENDED_H
+#define MATCH_EXTENDED_H 1
 
 #include <stdbool.h>
 #include "oflib-exp/ofl-exp-match.h"
@@ -54,4 +54,4 @@ match_ext_nonstrict(struct ofl_ext_match *a, struct ofl_ext_match *b);
 
 
 
-#endif /* MATCH_STD_H */
+#endif /* MATCH_EXTENDED_H */

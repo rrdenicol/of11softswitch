@@ -31,6 +31,7 @@
 
 #include <config.h>
 #include <arpa/inet.h>
+
 #include <errno.h>
 #include <getopt.h>
 #include <inttypes.h>
@@ -65,6 +66,7 @@
 #include "ofpbuf.h"
 #include "openflow/openflow.h"
 #include "packets.h"
+#include "ipv6_util.h"
 #include "random.h"
 #include "socket-util.h"
 #include "timeval.h"
@@ -118,6 +120,9 @@ parse_group_mod_args(char *str, struct ofl_msg_group_mod *req);
 
 static void
 parse_bucket(char *str, struct ofl_bucket *b);
+
+static void
+parse_ext_flow_stat_args(char *str, struct ofl_ext_flow_stats_request *req);
 
 static void
 parse_flow_stat_args(char *str, struct ofl_msg_stats_request_flow *req);
@@ -179,8 +184,6 @@ parse16(char *str, struct names16 *names, size_t names_num, uint16_t max, uint16
 static int
 parse32(char *str, struct names32 *names, size_t names_num, uint32_t max, uint32_t *val);
 
-static void
-str_to_ipv6(const char *str_, struct in6_addr *addrp, struct in6_addr *maskp);
 
 int
 ofputil_flow_format_from_string(const char *s);
@@ -437,26 +440,52 @@ stats_desc(struct vconn *vconn, int argc UNUSED, char *argv[] UNUSED) {
 
 static void
 stats_flow(struct vconn *vconn, int argc, char *argv[]) {
-    struct ofl_msg_stats_request_flow req =
-            {{{.type = OFPT_STATS_REQUEST},
-              .type = OFPST_FLOW, .flags = 0x0000},
-             .cookie = 0x0000000000000000ULL,
-             .cookie_mask = 0x0000000000000000ULL,
-             .table_id = 0xff,
-             .out_port = OFPP_ANY,
-             .out_group = OFPG_ANY,
-             .match = NULL};
+    
+    
+    if (!preferred_flow_format){
+        struct ofl_msg_stats_request_flow req =
+                {{{.type = OFPT_STATS_REQUEST},
+                  .type = OFPST_FLOW, .flags = 0x0000},
+                 .cookie = 0x0000000000000000ULL,
+                 .cookie_mask = 0x0000000000000000ULL,
+                 .table_id = 0xff,
+                 .out_port = OFPP_ANY,
+                 .out_group = OFPG_ANY,
+                 .match = NULL};
 
-    if (argc > 0) {
-        parse_flow_stat_args(argv[0], &req);
+        if (argc > 0) {
+            parse_flow_stat_args(argv[0], &req);
+        }
+        if (argc > 1) {
+            parse_match(argv[1], &(req.match), preferred_flow_format);
+        } else {
+            make_all_match(&(req.match));
+        }
+        dpctl_transact_and_print(vconn, (struct ofl_msg_header *)&req, NULL);
     }
-    if (argc > 1) {
-        parse_match(argv[1], &(req.match), preferred_flow_format);
-    } else {
-        make_all_match(&(req.match));
+    else {
+        struct ofl_ext_flow_stats_request request = 
+            {{{{ .type = OFPT_STATS_REQUEST},
+                 .type = OFPST_EXPERIMENTER, .flags =  0x0000},
+                 .experimenter_id = EXTENDED_MATCH_ID},
+                 .cookie_mask = 0x0000000000000000ULL,
+                 .table_id = 0xff,
+                 .out_port = OFPP_ANY,
+                 .out_group = OFPG_ANY,
+                 .match = NULL};
+                 
+        if (argc > 0) {
+            parse_ext_flow_stat_args(argv[0], &request);
+        }
+        if (argc > 1) {
+            parse_match(argv[1], &(request.match), preferred_flow_format);
+        } else {
+            make_all_match(&(request.match));
+        }
+            dpctl_transact_and_print(vconn, (struct ofl_msg_header *)&request, NULL);
     }
 
-    dpctl_transact_and_print(vconn, (struct ofl_msg_header *)&req, NULL);
+
 }
 
 static void
@@ -1088,7 +1117,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
         m->header.type = OFPMT_STANDARD;
     }
     else {   
-        ext_m = xmalloc(sizeof(struct ofl_ext_match) + 64);     
+        ext_m = xmalloc(sizeof(struct ofl_ext_match) + 128);     
         ext_m->header.type = EXT_MATCH;
         ext_m->header.length = sizeof(struct ext_match);
         flex_array_init(&(ext_m->match_fields));
@@ -1463,13 +1492,62 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
         }
         if (strncmp(token, MATCH_NW_SRC_IPV6 , strlen(MATCH_NW_SRC_IPV6 )) == 0) {
             if(!flow_format){ 
-                if (parse8(token + strlen(MATCH_MPLS_TC KEY_VAL), NULL, 0, 0x07, &(m->mpls_tc))) {
-                    ofp_fatal(0, "Error parsing nw_src_ipv6: %s.", token);
-                }
+                   ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
             }
             else {
-            
-            
+                 struct in6_addr addr, mask;
+                 if (str_to_ipv6(token + strlen(MATCH_NW_SRC_IPV6)+1, &addr, &mask) < 0) {
+                     ofp_fatal(0, "Error parsing nw_src_ipv6: %s.", token);
+                 }
+                 else 
+                    ext_put_ipv6(&ext_m->match_fields,TLV_EXT_IPV6_SRC_W, &addr, &mask);
+                    
+                 ext_m->header.length += 36; 
+            }
+            continue;
+        }
+        /* IPv6 dst address */
+        if (strncmp(token, MATCH_NW_DST_IPV6 , strlen(MATCH_NW_DST_IPV6 )) == 0) {
+            if(!flow_format){ 
+                   ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
+            }
+            else {
+                 struct in6_addr addr, mask;
+                 if (str_to_ipv6(token + strlen(MATCH_NW_DST_IPV6)+1, &addr, &mask) < 0) {
+                     ofp_fatal(0, "Error parsing nw_src_ipv6: %s.", token);
+                 }
+                 else {
+                    
+                    ext_put_ipv6(&ext_m->match_fields,TLV_EXT_IPV6_DST_W, &addr, &mask);
+                    
+                    }
+                 ext_m->header.length += 36; 
+            }
+            continue;
+        }
+        /*Routing extension header */
+        if (strncmp(token, MATCH_ROUTING_HEADER_IPV6 , strlen(MATCH_ROUTING_HEADER_IPV6 )) == 0) {
+            if(!flow_format){ 
+                   ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
+            }
+            else {
+                 ext_put_8(&ext_m->match_fields, TLV_EXT_IPV6_RH_ID , 43 /*Routing Next Header Value */, 0xff);
+                 ext_m->header.length += 5;
+
+            }
+            continue;
+        }
+        /*Hop by Hop */
+        if (strncmp(token, MATCH_HBH_HEADER_IPV6 , strlen(MATCH_HBH_HEADER_IPV6 )) == 0) {
+            if(!flow_format){ 
+                   ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
+            }
+            else {
+                 uint8_t v = 0;
+                 uint8_t mask = 0xff;
+                 ext_put_8(&ext_m->match_fields, TLV_EXT_IPV6_HBH_ID, v /*Hop by Hop Header Value */, mask);
+                 ext_m->header.length += 5;
+
             }
             continue;
         }
@@ -1792,6 +1870,44 @@ parse_inst(char *str, struct ofl_instruction_header **inst) {
     ofp_fatal(0, "Error parsing instruction: %s.", str);
 }
 
+static void
+parse_ext_flow_stat_args(char *str, struct ofl_ext_flow_stats_request *req) {
+    char *token, *saveptr = NULL;
+
+    for (token = strtok_r(str, KEY_SEP, &saveptr); token != NULL; token = strtok_r(NULL, KEY_SEP, &saveptr)) {
+        if (strncmp(token, FLOW_MOD_COOKIE KEY_VAL, strlen(FLOW_MOD_COOKIE KEY_VAL)) == 0) {
+            if (sscanf(token, FLOW_MOD_COOKIE KEY_VAL "0x%"SCNx64"", &(req->cookie)) != 1) {
+                ofp_fatal(0, "Error parsing flow_stat cookie: %s.", token);
+            }
+            continue;
+        }
+        if (strncmp(token, FLOW_MOD_COOKIE_MASK KEY_VAL, strlen(FLOW_MOD_COOKIE_MASK KEY_VAL)) == 0) {
+            if (sscanf(token, FLOW_MOD_COOKIE KEY_VAL "0x%"SCNx64"", &(req->cookie)) != 1) {
+                ofp_fatal(0, "Error parsing flow_stat cookie mask: %s.", token);
+            }
+            continue;
+        }
+        if (strncmp(token, FLOW_MOD_TABLE_ID KEY_VAL, strlen(FLOW_MOD_TABLE_ID KEY_VAL)) == 0) {
+            if (parse8(token + strlen(FLOW_MOD_TABLE_ID KEY_VAL), table_names, NUM_ELEMS(table_names), 254,  &req->table_id)) {
+                ofp_fatal(0, "Error parsing flow_stat table: %s.", token);
+            }
+            continue;
+        }
+        if (strncmp(token, FLOW_MOD_OUT_PORT KEY_VAL, strlen(FLOW_MOD_OUT_PORT KEY_VAL)) == 0) {
+            if (parse_port(token + strlen(FLOW_MOD_OUT_PORT KEY_VAL), &req->out_port)) {
+                ofp_fatal(0, "Error parsing flow_stat port: %s.", token);
+            }
+            continue;
+        }
+        if (strncmp(token, FLOW_MOD_OUT_GROUP KEY_VAL, strlen(FLOW_MOD_OUT_GROUP KEY_VAL)) == 0) {
+            if (parse_group(token + strlen(FLOW_MOD_OUT_GROUP KEY_VAL), &req->out_port)) {
+                ofp_fatal(0, "Error parsing flow_stat group: %s.", token);
+            }
+            continue;
+        }
+        ofp_fatal(0, "Error parsing flow_stat arg: %s.", token);
+    }
+}
 
 static void
 parse_flow_stat_args(char *str, struct ofl_msg_stats_request_flow *req) {
@@ -2236,53 +2352,14 @@ parse32(char *str, struct names32 *names, size_t names_num, uint32_t max, uint32
     return -1;
 }
 
-/*static void
-str_to_ipv6(const char *str_, struct in6_addr *addrp, struct in6_addr *maskp)
-{
-    char *str = xstrdup(str_);
-    char *save_ptr = NULL;
-    const char *name, *netmask;
-    struct in6_addr addr, mask;
-    int retval;
 
-    name = strtok_r(str, "/", &save_ptr);
-    retval = name ? lookup_ipv6(name, &addr) : EINVAL;
-    if (retval) {
-        ovs_fatal(0, "%s: could not convert to IPv6 address", str);
-    }
-
-    netmask = strtok_r(NULL, "/", &save_ptr);
-    if (netmask) {
-        int prefix = atoi(netmask);
-        if (prefix <= 0 || prefix > 128) {
-            ovs_fatal(0, "%s: network prefix bits not between 1 and 128",
-                      str);
-        } else {
-            mask = ipv6_create_mask(prefix);
-        }
-    } else {
-        mask = in6addr_exact;
-    }
-    *addrp = ipv6_addr_bitand(&addr, &mask);
-
-    if (maskp) {
-        *maskp = mask;
-    } else {
-        if (!ipv6_mask_is_exact(&mask)) {
-            ovs_fatal(0, "%s: netmask not allowed here", str_);
-        }
-    }
-
-    free(str);
-}
-*/
 
 const char *
 ofputil_flow_format_to_string(enum ofp_ext_flow_format flow_format)
 {
     switch (flow_format) {
     case OFPMT_STANDARD:
-        return "openflow10";
+        return "openflow11";
     case NXFF_TUN_ID_FROM_COOKIE:
         return "tun_id_from_cookie";
     case EXT_MATCH:

@@ -139,3 +139,29 @@ ofl_msg_ext_pack_flow_removed(struct ofl_nx_flow_removed *msg, uint8_t **buf, si
 
     return 0;
 }*/
+
+
+int
+ofl_ext_pack_stats_request_flow(struct ofl_ext_flow_stats_request *msg, uint8_t **buf, size_t *buf_len){
+
+    struct ofp_stats_request *req;
+    struct ofp_ext_flow_stats_request *stats;
+
+    *buf_len = sizeof(struct ofp_stats_request) + sizeof(struct ofp_flow_stats_request);
+    *buf     = (uint8_t *)malloc(*buf_len);
+
+    req = (struct ofp_stats_request *)(*buf);
+    stats = (struct ofp_ext_flow_stats_request *)req->body;
+    stats->table_id    =        msg->table_id;
+    stats->out_port    = htonl( msg->out_port);
+    stats->out_group   = htonl( msg->out_group);
+    stats->cookie      = hton64(msg->cookie);
+    stats->cookie_mask = hton64(msg->cookie_mask);
+
+    ofl_exp_match_pack(msg->match, &(stats->match.header));
+
+    return 0;
+
+
+}
+

@@ -131,46 +131,6 @@ str_to_ip(const char *str_, uint32_t *ip, uint32_t *maskp)
     free(str);
 }
 
-static void
-str_to_ipv6(const char *str_, struct in6_addr *addrp, struct in6_addr *maskp)
-{
-    char *str = xstrdup(str_);
-    char *save_ptr = NULL;
-    const char *name, *netmask;
-    struct in6_addr addr, mask;
-    int retval;
-
-    name = strtok_r(str, "/", &save_ptr);
-    retval = name ? lookup_ipv6(name, &addr) : EINVAL;
-    if (retval) {
-        ovs_fatal(0, "%s: could not convert to IPv6 address", str);
-    }
-
-    netmask = strtok_r(NULL, "/", &save_ptr);
-    if (netmask) {
-        int prefix = atoi(netmask);
-        if (prefix <= 0 || prefix > 128) {
-            ovs_fatal(0, "%s: network prefix bits not between 1 and 128",
-                      str);
-        } else {
-            mask = ipv6_create_mask(prefix);
-        }
-    } else {
-        mask = in6addr_exact;
-    }
-    *addrp = ipv6_addr_bitand(&addr, &mask);
-
-    if (maskp) {
-        *maskp = mask;
-    } else {
-        if (!ipv6_mask_is_exact(&mask)) {
-            ovs_fatal(0, "%s: netmask not allowed here", str_);
-        }
-    }
-
-    free(str);
-}
-
 
 static bool
 parse_port_name(const char *name, uint16_t *port)

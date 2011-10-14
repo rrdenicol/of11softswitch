@@ -101,8 +101,8 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
         	field = proto->FirstField;
               	while(1)
                	{
-
-			if((char)field->LongName[0]<58 && (char)field->LongName[0]>47)
+			
+			if((char)field->LongName[0]<58 && (char)field->LongName[0]>47 && field->isField )
                         {
 				/* A value between 47 and 58 indicates a field defined for Matching */
 	                        int i,pow;
@@ -110,9 +110,11 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
                                 uint8_t size;
 				packet_fields_t * pktout_field;
 		                pktout_field = (packet_fields_t*) malloc(sizeof(packet_fields_t));
-				
+
+
                                 field_values_t *new_field;
                                 new_field = (field_values_t *)malloc(sizeof(field_values_t));
+				new_field->len = (uint32_t) field->Size;
 
                                 for (type=0,i=0,pow=100;i<3;i++,pow = (pow==1 ? pow : pow/10))
         	                        type = type + (pow*(field->LongName[i]-48));
@@ -159,6 +161,69 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
 			}
 			else if (!field->NextField->isField)
 			{
+
+				if ((char)field->NextField->LongName[0]<58 && (char)field->NextField->LongName[0]>47)
+				{
+		                        int i,pow;
+	                                uint32_t type;
+					packet_fields_t * pktout_field;
+			                pktout_field = (packet_fields_t*) malloc(sizeof(packet_fields_t));
+
+		                        field_values_t *new_field;
+                	                new_field = (field_values_t *)malloc(sizeof(field_values_t));
+
+					for (type=0,i=0,pow=100;i<3;i++,pow = (pow==1 ? pow : pow/10))
+        	                        	type = type + (pow*(field->NextField->LongName[i]-48));
+								
+				        new_field->value = (uint8_t*) malloc(field->Size);
+					_nbPDMLField * nbPrevField; 
+				
+					if( !field->isField)
+						nbPrevField = field->FirstChild;
+					else
+						nbPrevField = proto->FirstField;
+
+					string NextHeader ("nexthdr");
+					bool found = true;
+					while(NextHeader.compare(nbPrevField->Name))
+					{
+						if(nbPrevField->NextField != NULL)
+							nbPrevField=nbPrevField->NextField;
+						else
+						{
+							found = false ;
+							break;
+						}
+					}
+
+					if (found)
+					{
+                                		pktout_field->header = NXM_HEADER(VENDOR_FROM_TYPE(type),FIELD_FROM_TYPE(type),nbPrevField->Size);
+	                                	memcpy(new_field->value,((uint8_t*)pktin->data + nbPrevField->Position),nbPrevField->Size);	
+						new_field->len = (uint32_t) nbPrevField->Size;
+
+						packet_fields_t *iter;
+						bool done=0;
+						HMAP_FOR_EACH(iter,packet_fields_t, hmap_node,pktout)
+						{
+							if(iter->header == pktout_field->header)
+							{
+								/* Adding entry to existing hash entry */
+								done=1;
+								break;
+							}
+						}
+	
+						if (!done)
+						{
+							/* Creating new hash map entry */
+							list_t_init(&pktout_field->fields);
+		                                	list_t_push_back(&pktout_field->fields,&new_field->list_node);
+		                                	hmap_insert(pktout, &pktout_field->hmap_node,
+			                        	hash_int(pktout_field->header, 0));
+						}
+					}
+				}
 				/* Next field is a block. */
 				field = field->NextField->FirstChild;
 			}
@@ -181,5 +246,28 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
 	if(PacketCounter == 10)
 		PacketCounter = 1;
 */
+	packet_fields_t *fields;
+
+	HMAP_FOR_EACH (fields,packet_fields_t, hmap_node,pktout){
+		if(fields != NULL)
+		{
+			printf("\nfield: %d    | size: %d     | ",fields->header,NXM_LENGTH(fields->header));
+			field_values_t *iter;
+			int count=0;
+			LIST_T_FOR_EACH(iter, field_values_t, list_node, &fields->fields)
+			{
+				printf("size on len: %d",iter->len);
+		                int x;
+				printf("\n%d          ",count);
+				count++;
+				
+       			        for (x=0;x<NXM_LENGTH(fields->header);x++)
+                		{
+					printf("%02X",iter->value[x]);
+                		}
+			}
+		}
+	}
+	return 1;
 }
 

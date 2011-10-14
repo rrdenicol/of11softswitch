@@ -98,7 +98,7 @@ ofl_ext_unpack_flow_mod(struct ofp_header *src, size_t *len, struct ofl_msg_expe
     dm->flags =        ntohs( sm->flags);
 
 
-    uint8_t *buff = src;
+    uint8_t *buff = (uint8_t*) src;
     buff += (sizeof(struct ofp_ext_flow_mod) -4);
     struct ext_match *match;
     match = (struct ext_match *) buff;    
@@ -182,6 +182,38 @@ ofl_ext_unpack_flow_removed(struct ofp_header *src, size_t *len, struct ofl_msg_
     return 0;
 }*/
 
+ofl_err
+ofl_msg_unpack_stats_request_flow(struct ofp_stats_request *os, size_t *len, struct ofl_msg_header **msg) {
+    
+    struct ofp_ext_flow_stats_request *sm;
+    struct ofl_ext_flow_stats_request *dm;
+    ofl_err error = 0;
 
+    // ofp_stats_request length was checked at ofl_msg_unpack_stats_request
+
+    if (*len < (sizeof(struct ofp_ext_flow_stats_request) - sizeof(struct ext_match))) {
+        OFL_LOG_WARN(LOG_MODULE, "Received FLOW stats request has invalid length (%zu).", *len);
+        return ofl_error(OFPET_BAD_REQUEST, OFPBRC_BAD_LEN);
+    }
+    *len -= (sizeof(struct ofp_flow_stats_request) - sizeof(struct ext_match));
+
+    sm = (struct ofp_ext_flow_stats_request *)os->body;
+    dm = (struct ofl_ext_flow_stats_request *)malloc(sizeof(struct ofl_ext_flow_stats_request));
+
+    dm->table_id = sm->table_id;
+    dm->out_port = ntohl(sm->out_port);
+    dm->out_group = ntohl(sm->out_group);
+    dm->cookie = ntoh64(sm->cookie);
+    dm->cookie_mask = ntoh64(sm->cookie_mask);
+
+    error = ofl_exp_match_unpack(&(sm->match.header), len, &(dm->match));
+    if (error) {
+        free(dm);
+        return error;
+    }
+
+    *msg = (struct ofl_msg_header *)dm;
+    return 0;
+}
 
 

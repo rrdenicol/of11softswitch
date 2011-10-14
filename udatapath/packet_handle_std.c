@@ -352,8 +352,9 @@ packet_handle_std_is_fragment(struct packet_handle_std *handle) {
 bool
 packet_handle_std_match(struct packet_handle_std *handle, struct ofl_match_standard *match) {
     packet_handle_std_validate(handle);
-
-    return match_std_nonstrict(handle->match, match);
+    bool ma = match_std_nonstrict(handle->match, match);
+    printf("MATCH %d\n",ma);
+    return match;
 }
 
 /* If pointer is not null, returns str; otherwise returns an empty string. */

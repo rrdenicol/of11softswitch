@@ -66,6 +66,24 @@ ofl_err
 dp_exp_stats(struct datapath *dp UNUSED,
                                   struct ofl_msg_stats_request_experimenter *msg,
                                   const struct sender *sender UNUSED) {
+    
+    switch (msg->experimenter_id) {
+        case (EXTENDED_MATCH_ID): {  
+            struct ofl_msg_stats_request_header *req = (struct  ofl_msg_stats_request_header *) msg;
+            
+            switch (req->type){
+                case (OFPST_EXPERIMENTER):{
+                    return pipeline_ext_handle_stats_request_flow(dp->pipeline, (struct ofl_ext_flow_stats_request *)msg, sender);                
+                
+                
+                }
+            
+            }
+        
+        
+        }
+    }                            
+    
 	VLOG_WARN_RL(LOG_MODULE, &rl, "Trying to handle unknown experimenter stats (%u).", msg->experimenter_id);
     return ofl_error(OFPET_BAD_REQUEST, OFPBRC_BAD_SUBTYPE);
 }

@@ -29,6 +29,7 @@
  * Author: Eder Leão Fernandes <ederlf@cpqd.com.br>
  */
  #ifndef OFL_EXP_EXT_MESSAGES_H
+ #define OFL_EXP_EXT_MESSAGES_H
 
 #include <sys/types.h>
 #include <stdbool.h>
@@ -49,8 +50,8 @@ struct ofl_ext_msg_header {
 /* extT_SET_FLOW_FORMAT request. */
 struct ofl_ext_set_flow_format {
     struct ofp_header header;
-    uint32_t subtype;           /* extT_SET_FLOW_FORMAT. */
-    uint32_t format;            /* One of extFF_*. */
+    uint32_t subtype;           /* EXT_SET_FLOW_FORMAT. */
+    uint32_t format;            /* One of EXTFF_*. */
 };
 
 /* EXT_FLOW_MOD (analogous to OFPT_FLOW_MOD). */
@@ -109,7 +110,7 @@ struct ofl_ext_flow_stats_request {
     uint8_t table_id;         /* ID of table to read (from ofp_table_stats),
                                  0xff for all tables. */
     uint8_t pad;               /* Align to 64 bits. */
-    uint16_t out_port;        /* Require matching entries to include this
+    uint32_t out_port;        /* Require matching entries to include this
                                  as an output port.  A value of OFPP_NONE
                                  indicates no restriction. */
     uint32_t out_group;       /* Require matching entries to include this
@@ -144,7 +145,10 @@ int
 ofl_msg_ext_pack_flow_removed(struct ofl_ext_flow_removed *msg, uint8_t **buf, size_t *buf_len);
 
 int
-ofl_msg_pack_stats_request_flow(struct ofl_ext_flow_stats_request *msg, uint8_t **buf, size_t *buf_len);
+ofl_ext_pack_stats_request_flow(struct ofl_ext_flow_stats_request *msg, uint8_t **buf, size_t *buf_len);
+
+ofl_err
+ofl_msg_unpack_stats_request_flow(struct ofp_stats_request *os, size_t *len, struct ofl_msg_header **msg);
 
 int
 ofl_msg_pack_stats_reply_aggregate(struct ofl_msg_stats_reply_aggregate *msg, uint8_t **buf, size_t *buf_len);
