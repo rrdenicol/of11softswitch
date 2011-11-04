@@ -72,6 +72,7 @@ strict_wild32(uint32_t a, uint32_t b, uint32_t aw, uint32_t bw, uint32_t f) {
 	      (~wc(aw, f) && ~wc(bw, f) && a == b);
 }
 
+
 static inline bool
 strict_mask16(uint16_t a, uint16_t b, uint16_t am, uint16_t bm) {
 	return (am == bm) && ((a ^ b) & ~am) == 0;
@@ -265,4 +266,3 @@ match_std_pkt(struct ofl_match_standard *a, struct ofl_match_standard *b) {
 		   pkt_wild8 (a->mpls_tc, b->mpls_tc, a->wildcards, OFPFW_MPLS_TC) &&
 		   pkt_mask64(a->metadata, b->metadata, a->metadata_mask);
 }
-

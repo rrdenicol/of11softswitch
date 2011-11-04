@@ -62,10 +62,12 @@ mod_match(struct hmap * flow ){
 
 
     struct nxm_field *f;
-    uint16_t *dl_type;
-    uint16_t *dl_type_m;
-    uint8_t *nw_proto ;
+    uint16_t *dl_type = malloc(sizeof(uint16_t));
+    uint16_t *dl_type_m ;
+    uint8_t *nw_proto = malloc(sizeof(uint8_t));
     uint8_t *nw_proto_m ;
+    
+    *nw_proto = *dl_type = 0x0000;
        
     HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_DL_TYPE, 0),
           flow) {
@@ -85,43 +87,48 @@ mod_match(struct hmap * flow ){
         HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_NW_TOS, 0),
             flow) {
                     
-            uint16_t *nw_tos = malloc (sizeof(uint16_t));
+            /*uint16_t *nw_tos = malloc (sizeof(uint16_t));
             uint16_t *nw_tos_m = malloc (sizeof(uint16_t)); 
             *nw_tos = 0x00;
             *nw_tos_m = 0xff;
             f->value = (uint8_t*) nw_tos;
-            f->mask = (uint8_t*) nw_tos_m;
+            f->mask = (uint8_t*) nw_tos_m;*/
+            hmap_remove(flow,&f->hmap_node);
         }
         HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_NW_PROTO, 0),
                     flow) {
             
-            nw_proto = malloc (sizeof(uint8_t));
+            /*nw_proto = malloc (sizeof(uint8_t));
             nw_proto_m = malloc (sizeof(uint8_t));        
             *nw_proto = 0x0000;
             *nw_proto_m = 0xff;
             f->value = (uint8_t*) nw_proto;
-            f->mask = (uint8_t*) nw_proto_m;
+            f->mask = (uint8_t*) nw_proto_m;*/
+            hmap_remove(flow,&f->hmap_node);
         }
                 
         HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_IP_SRC, 0),
                 flow) {
-            uint32_t *ip_src = malloc (sizeof(int));
+           
+            /*uint32_t *ip_src = malloc (sizeof(int));
             uint32_t *ip_src_m = malloc (sizeof(int)); 
             *ip_src = 0x00000000;
             *ip_src_m = 0xffffffff;
             f->value = (uint8_t*) ip_src;
-            f->mask = (uint8_t*) ip_src_m;
+            f->mask = (uint8_t*) ip_src_m;*/
+            hmap_remove(flow,&f->hmap_node);
         }
         
         HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_IP_DST, 0),
                 flow) {
                     
-            uint32_t *ip_dst = malloc (sizeof(int)); 
+            /*uint32_t *ip_dst = malloc (sizeof(int)); 
             uint32_t *ip_dst_m = malloc (sizeof(int));;
             *ip_dst = 0x00000000;
             *ip_dst_m = 0xffffffff;
             f->value = (uint8_t*) ip_dst;
-            f->mask = (uint8_t*) ip_dst_m;
+            f->mask = (uint8_t*) ip_dst_m;*/
+            hmap_remove(flow,&f->hmap_node);
         }                          
                  
     }
@@ -137,22 +144,24 @@ mod_match(struct hmap * flow ){
 
         HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_TP_SRC, 0),
                 flow) {
-            uint16_t *tp_src = malloc (sizeof(uint16_t)); 
+            /*uint16_t *tp_src = malloc (sizeof(uint16_t)); 
             uint16_t *tp_src_m = malloc (sizeof(uint16_t));
             *tp_src = 0x0000;
             *tp_src_m = 0xffff;
             f->value = (uint8_t*) tp_src;
-            f->mask = (uint8_t*) tp_src_m;
+            f->mask = (uint8_t*) tp_src_m;*/
+            hmap_remove(flow,&f->hmap_node);
         }
                         
         HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_TP_DST, 0),
                 flow) {
-            uint16_t *tp_dst = malloc (sizeof(uint16_t)); 
+            /*uint16_t *tp_dst = malloc (sizeof(uint16_t)); 
             uint16_t *tp_dst_m = malloc (sizeof(uint16_t));
             *tp_dst = 0x0000;
             *tp_dst_m = 0xffff;
             f->value = (uint8_t*) tp_dst;
-            f->mask = (uint8_t*) tp_dst_m;
+            f->mask = (uint8_t*) tp_dst_m;*/
+            hmap_remove(flow,&f->hmap_node);
                         
          }        
                     
@@ -163,22 +172,24 @@ mod_match(struct hmap * flow ){
           
         HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_MPLS_LABEL, 0),
                 flow) {
-            uint32_t *mpls_label = malloc (sizeof(uint16_t)); 
+           /* uint32_t *mpls_label = malloc (sizeof(uint16_t)); 
             uint32_t *mpls_label_m = malloc (sizeof(uint16_t));
             *mpls_label = 0x00000000;
             *mpls_label_m = 0xffffffff;
             f->value = (uint8_t*) mpls_label;
-            f->mask = (uint8_t*) *mpls_label_m;
+            f->mask = (uint8_t*) *mpls_label_m;*/
+            hmap_remove(flow,&f->hmap_node);
         }
                         
         HMAP_FOR_EACH_WITH_HASH (f, struct nxm_field, hmap_node, hash_int(TLV_EXT_MPLS_TC, 0),
                 flow) {
-            uint16_t *mpls_tc = malloc (sizeof(uint16_t)); 
+            /*uint16_t *mpls_tc = malloc (sizeof(uint16_t)); 
             uint16_t *mpls_tc_m = malloc (sizeof(uint16_t));
             *mpls_tc = 0x0000;
             *mpls_tc_m = 0xffff;
             f->value = (uint8_t*) mpls_tc;
-            f->mask = (uint8_t*) mpls_tc_m;
+            f->mask = (uint8_t*) mpls_tc_m;*/
+            hmap_remove(flow,&f->hmap_node);
                         
          }              
                          
@@ -206,7 +217,7 @@ ext_pull_match(struct ofl_ext_match *match_src, struct hmap * match_dst)
         if (NXM_HASMASK(header)){
             f->mask = p + 4 + length / 2;
             f->header = NXM_HEADER( NXM_VENDOR(header), NXM_FIELD(header), NXM_LENGTH(header)/2);
-             f->length = length/2;
+            f->length = length/2;
         }
         else {
             f->mask = malloc(length);

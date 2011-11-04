@@ -46,6 +46,8 @@ AC_PROG_CPP
 AC_PROG_RANLIB
 AC_PROG_MKDIR_P
 
+AC_PROG_CXX
+
 AC_ARG_VAR([PERL], [path to Perl interpreter])
 AC_PATH_PROG([PERL], perl, no)
 if test "$PERL" = no; then
@@ -58,8 +60,8 @@ OFP_CHECK_HWTABLES
 OFP_CHECK_HWLIBS
 AC_SYS_LARGEFILE
 
-AC_CHECK_LIB(nbeelink,nbee_link_initialize)
-#AC_CHECK_LIB(nbee,nbGetLastError)
+#AC_CHECK_LIB(nbeelink,nbee_link_initialize)
+AC_CHECK_LIB(nbee,nbGetLastError)
 
 AC_CHECK_FUNCS([strsignal])
 

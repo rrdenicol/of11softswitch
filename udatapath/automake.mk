@@ -46,7 +46,7 @@ udatapath_ofdatapath_SOURCES = \
 	udatapath/pipeline.h \
 	udatapath/udatapath.c
 
-udatapath_ofdatapath_LDADD = lib/libopenflow.a oflib/liboflib.a oflib-exp/liboflib_exp.a $(SSL_LIBS) $(FAULT_LIBS)
+udatapath_ofdatapath_LDADD = lib/libopenflow.a oflib/liboflib.a oflib-exp/liboflib_exp.a nbee_link/libnbee_link.a $(SSL_LIBS) $(FAULT_LIBS)
 udatapath_ofdatapath_CPPFLAGS = $(AM_CPPFLAGS)
 
 EXTRA_DIST += udatapath/ofdatapath.8.in

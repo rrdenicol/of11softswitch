@@ -130,12 +130,6 @@ dp_exp_message(struct datapath *dp,
 	            case (EXT_FLOW_MOD): {
 	                struct ofl_ext_flow_mod *fm =  (struct ofl_ext_flow_mod *) exp;
 	                pipeline_handle_ext_flow_mod(dp->pipeline, fm, sender);
-                    /*struct ofl_ext_match *match = (struct ofl_ext_match *) fm->match;
-                    struct ofl_instruction_header *inst = (struct ofl_instruction_header *) *fm->instructions;
-                    uint8_t *x = match->match_fields.entries;
-                    uint32_t *p = x + 10;
-                    printf("MATCH %x\n", *p); */
-	                /*Return the Extended Flow Mod handler */
 	                return 0;
 	            }
 	        
