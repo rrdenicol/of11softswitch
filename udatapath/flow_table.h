@@ -34,6 +34,7 @@
 #include "oflib/ofl.h"
 #include "oflib/ofl-messages.h"
 #include "oflib/ofl-structs.h"
+#include "oflib-exp/ofl-exp-ext-messages.h"
 #include "pipeline.h"
 #include "timeval.h"
 

@@ -196,7 +196,12 @@ static struct names16 action_names[] = {
 #define MATCH_NW_SRC_IPV6   "nw_src_ipv6"
 #define MATCH_NW_DST_IPV6   "nw_dst_ipv6"
 #define MATCH_ROUTING_HEADER_IPV6   "rh_ipv6"
+#define MATCH_ROUTING_ADDRESS_IPV6   "rh_add_ipv6"
 #define MATCH_HBH_HEADER_IPV6   "hbh_ipv6"
+#define MATCH_HBH_OPTION_CODE_IPV6 "hbh_code_ipv6"
+#define MATCH_DO_HEADER_IPV6   "doh_ipv6"
+#define MATCH_AUTHENTICATION_HEADER_IPV6   "ah_ipv6"
+#define MATCH_FRAGMENT_HEADER_IPV6   "fh_ipv6"
 
 
 #define GROUP_MOD_COMMAND "cmd"

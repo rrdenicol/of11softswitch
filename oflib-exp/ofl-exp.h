@@ -33,6 +33,7 @@
 #define OFL_EXP_H 1
 
 #include "../oflib/ofl-messages.h"
+#include "../oflib-exp/ofl-exp-ext-messages.h"
 #include "openflow/openflow.h"
 
 
@@ -48,5 +49,27 @@ ofl_exp_msg_free(struct ofl_msg_experimenter *msg);
 char *
 ofl_exp_msg_to_string(struct ofl_msg_experimenter *msg);
 
+int 
+ofl_exp_req_pack(struct ofl_msg_stats_request_header *msg, uint8_t **buf, size_t *buf_len);
+
+ofl_err 
+ofl_exp_req_unpack(struct ofp_stats_request *os, size_t *len, struct ofl_msg_stats_request_header **msg);
+
+int ofl_exp_free_stats_req(struct ofl_msg_stats_request_header *msg);
+
+char* 
+ofl_req_to_string(struct ofl_msg_stats_request_header *msg);
+
+int 
+ofl_exp_reply_pack(struct ofl_msg_stats_reply_header *msg, uint8_t **buf, size_t *buf_len);
+
+ofl_err 
+ofl_exp_reply_unpack(struct ofp_stats_reply *os, size_t *len, struct ofl_msg_stats_reply_header **msg);
+
+char * 
+ext_reply_to_string (struct ofl_msg_stats_reply_header *msg);
+
+int 
+ext_free_stats_reply (struct ofl_msg_stats_reply_header *msg);
 
 #endif /* OFL_EXP_H */

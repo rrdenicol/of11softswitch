@@ -39,6 +39,7 @@
 #include "list.h"
 #include "oflib/ofl-structs.h"
 #include "oflib/ofl-messages.h"
+#include "oflib-exp/ofl-exp-ext-messages.h"
 #include "timeval.h"
 
 /****************************************************************************

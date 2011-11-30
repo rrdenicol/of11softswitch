@@ -42,6 +42,7 @@
 #include "oflib/ofl-structs.h"
 #include "oflib/ofl-print.h"
 #include "util.h"
+#include "packet_handle_ext.h"
 
 
 struct packet *

@@ -405,6 +405,7 @@ ofl_msg_pack_stats_request(struct ofl_msg_stats_request_header *msg, uint8_t **b
     struct ofp_stats_request *req;
     int error;
 
+    
     switch (msg->type) {
     case OFPST_DESC: {
         error = ofl_msg_pack_stats_request_empty(msg, buf, buf_len);
@@ -438,7 +439,7 @@ ofl_msg_pack_stats_request(struct ofl_msg_stats_request_header *msg, uint8_t **b
     case OFPST_EXPERIMENTER: {
         if (exp == NULL || exp->stats == NULL || exp->stats->req_pack == NULL) {
             OFL_LOG_WARN(LOG_MODULE, "Trying to pack experimenter stat req, but no callback was given.");
-            error = -1;
+            error = 1;
         } else {
             error = exp->stats->req_pack(msg, buf, buf_len);
         }
@@ -446,7 +447,7 @@ ofl_msg_pack_stats_request(struct ofl_msg_stats_request_header *msg, uint8_t **b
     }
     default: {
         OFL_LOG_WARN(LOG_MODULE, "Trying to pack unknown experimenter stat req type.");
-        error = -1;
+        error = 1;
     }
     }
 
@@ -456,9 +457,14 @@ ofl_msg_pack_stats_request(struct ofl_msg_stats_request_header *msg, uint8_t **b
 
     req = (struct ofp_stats_request *)(*buf);
 
+    req->header.type = msg->header.type;
     req->type  = htons(msg->type);
     req->flags = htons(msg->flags);
-    memset(req->pad, 0x00, 4);
+    if(msg->type == OFPST_EXPERIMENTER){
+        struct ofl_msg_stats_request_experimenter * exp_msg = (struct ofl_msg_stats_request_experimenter *) msg;
+        memcpy(req->pad, &exp_msg->experimenter_id,sizeof(exp_msg->experimenter_id)); 
+    } 
+    else memset(req->pad, 0x00, 4);
 
     return 0;
 }
@@ -491,7 +497,6 @@ ofl_msg_pack_stats_reply_flow(struct ofl_msg_stats_reply_flow *msg, uint8_t **bu
 
     *buf_len = sizeof(struct ofp_stats_reply) + ofl_structs_flow_stats_ofp_total_len(msg->stats, msg->stats_num, exp);
     *buf     = (uint8_t *)malloc(*buf_len);
-
     resp = (struct ofp_stats_reply *)(*buf);
     data = (uint8_t *)resp->body;
 
@@ -501,6 +506,8 @@ ofl_msg_pack_stats_reply_flow(struct ofl_msg_stats_reply_flow *msg, uint8_t **bu
 
     return 0;
 }
+
+
 
 static int
 ofl_msg_pack_stats_reply_aggregate(struct ofl_msg_stats_reply_aggregate *msg, uint8_t **buf, size_t *buf_len) {
@@ -657,7 +664,9 @@ ofl_msg_pack_stats_reply(struct ofl_msg_stats_reply_header *msg, uint8_t **buf, 
                 error = -1;
             } else {
                 error = exp->stats->reply_pack(msg, buf, buf_len);
+                
             }
+            break;
         }
         default: {
             OFL_LOG_WARN(LOG_MODULE, "Trying to pack unknown stat resp type.");
@@ -670,7 +679,7 @@ ofl_msg_pack_stats_reply(struct ofl_msg_stats_reply_header *msg, uint8_t **buf, 
     }
 
     resp = (struct ofp_stats_reply *)(*buf);
-
+    
     resp->type  = htons(msg->type);
     resp->flags = htons(msg->flags);
     memset(resp->pad, 0x00, 4);
@@ -744,9 +753,10 @@ ofl_msg_pack(struct ofl_msg_header *msg, uint32_t xid, uint8_t **buf, size_t *bu
             break;
         }
         case OFPT_EXPERIMENTER: {
+           
             if (exp == NULL || exp->msg == NULL || exp->msg->pack == NULL) {
                 OFL_LOG_WARN(LOG_MODULE, "Trying to pack experimenter msg, but no callback was given.");
-                error = -1;
+                error = 1;
             } else {
                 error = exp->msg->pack((struct ofl_msg_experimenter *)msg, buf, buf_len);
             }

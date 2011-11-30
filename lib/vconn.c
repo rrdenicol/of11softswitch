@@ -69,6 +69,16 @@ enum vconn_state {
     VCS_DISCONNECTED            /* Connection failed or connection closed. */
 };
 
+static struct ofl_exp_stats ofl_exp_stats = 
+        {.req_pack      = ofl_exp_req_pack,
+         .req_unpack    = ofl_exp_req_unpack,
+         .req_free      = ofl_exp_free_stats_req,
+         .req_to_string = ofl_req_to_string,
+         .reply_pack    = ofl_exp_reply_pack,
+         .reply_unpack  = ofl_exp_reply_unpack,
+         .reply_free    = ext_free_stats_reply ,
+         .reply_to_string     = ext_reply_to_string };
+
 static struct ofl_exp_msg ofl_exp_msg =
         {.pack      = ofl_exp_msg_pack,
          .unpack    = ofl_exp_msg_unpack,
@@ -87,7 +97,7 @@ static struct ofl_exp ofl_exp =
         {.act   = NULL,
          .inst  = NULL,
          .match = &ofl_exp_match,
-         .stats = NULL,
+         .stats = &ofl_exp_stats,
          .msg   = &ofl_exp_msg};
 
 static struct vconn_class *vconn_classes[] = {
@@ -512,10 +522,9 @@ again:
         if (VLOG_IS_DBG_ENABLED(LOG_MODULE)) {
             struct ofl_msg_header *msg;
             char *str;
-            
+
             if (!ofl_msg_unpack((*msgp)->data, (*msgp)->size, &msg, NULL/*xid*/, &ofl_exp)) {
-                str = ofl_msg_to_string(msg, &ofl_exp);
-                
+                str = ofl_msg_to_string(msg, &ofl_exp);            
                 ofl_msg_free(msg, &ofl_exp);
             } else {         
                 struct ds string = DS_EMPTY_INITIALIZER;
@@ -613,6 +622,7 @@ do_send(struct vconn *vconn, struct ofpbuf *buf)
             ds_put_hex_dump(&string, buf->data, MIN(buf->size, 1024), 0, false);
             str = ds_cstr(&string);
         }
+
         retval = (vconn->class->send)(vconn, buf);
 
         if (retval != EAGAIN) {

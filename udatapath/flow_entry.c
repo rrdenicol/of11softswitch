@@ -48,6 +48,7 @@
 #include "timeval.h"
 #include "util.h"
 #include "match_std.h"
+#include "match_ext.h"
 #include "nx-match.h"
 
 #include "vlog.h"
@@ -137,7 +138,10 @@ flow_entry_matches(struct flow_entry *entry, struct ofl_msg_flow_mod *mod, bool 
 
 bool
 ext_flow_entry_overlaps(struct flow_entry *entry, struct ofl_ext_flow_mod *mod) {
-
+  return (entry->stats->priority == mod->priority &&
+            (mod->out_port == OFPP_ANY || flow_entry_has_out_port(entry, mod->out_port)) &&
+            (mod->out_group == OFPG_ANY || flow_entry_has_out_group(entry, mod->out_group)) &&
+            ext_flow_entry_matches(entry, mod, false, true));
 }
 
 bool
@@ -421,16 +425,29 @@ flow_entry_destroy(struct flow_entry *entry) {
 
 void
 flow_entry_remove(struct flow_entry *entry, uint8_t reason) {
+    
     if (entry->send_removed) {
         flow_entry_update(entry);
+        uint16_t type = entry->match->type;
+        if (type == OFPMT_STANDARD)
         {
             struct ofl_msg_flow_removed msg =
                     {{.type = OFPT_FLOW_REMOVED},
                      .reason = reason,
                      .stats  = entry->stats};
-
             dp_send_message(entry->dp, (struct ofl_msg_header *)&msg, NULL);
         }
+        else if ( type == EXT_MATCH){
+            struct ofl_ext_msg_flow_removed msg =  
+            {{{  {.type = OFPT_EXPERIMENTER  },
+             .experimenter_id = EXTENDED_MATCH_ID},
+             .type =  EXT_FLOW_REMOVED},
+             .reason = reason,
+             .stats  = entry->stats};
+            
+            dp_send_message(entry->dp, (struct ofl_msg_header *)&msg, NULL);           
+           
+            }
     }
 
     list_remove(&entry->match_node);

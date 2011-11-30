@@ -251,6 +251,7 @@ ofl_structs_flow_stats_pack(struct ofl_flow_stats *src, struct ofp_flow_stats *d
     dst->packet_count = hton64(src->packet_count);
     dst->byte_count = hton64(src->byte_count);
 
+    
     ofl_structs_match_pack(src->match, &(dst->match.header), exp);
 
 
@@ -571,6 +572,7 @@ ofl_structs_match_pack(struct ofl_match_header *src, struct ofp_match_header *ds
                 OFL_LOG_WARN(LOG_MODULE, "Trying to pack experimenter match, but no callback was given.");
                 return -1;
             }
+            printf("I'm experimenter match\n");
             return exp->match->pack(src, dst);
         }
     }

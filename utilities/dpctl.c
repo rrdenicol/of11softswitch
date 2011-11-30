@@ -149,7 +149,8 @@ parse_table_mod(char *str, struct ofl_msg_table_mod *msg);
 static void
 make_all_match(struct ofl_match_header **match);
 
-
+static void
+make_ext_all_match(struct ofl_match_header **match);
 
 
 static int
@@ -191,6 +192,15 @@ ofputil_flow_format_from_string(const char *s);
 const char *
 ofputil_flow_format_to_string(enum ofp_ext_flow_format flow_format);
 
+static struct ofl_exp_stats dpctl_exp_stats = 
+        {.req_pack      = ofl_exp_req_pack,
+         .req_unpack    = ofl_exp_req_unpack,
+         .req_free      = ofl_exp_free_stats_req,
+         .req_to_string = ofl_req_to_string,
+         .reply_pack    = ofl_exp_reply_pack,
+         .reply_unpack  = ofl_exp_reply_unpack,
+         .reply_free    = ext_free_stats_reply,
+         .reply_to_string     = ext_reply_to_string };
 
 static struct ofl_exp_msg dpctl_exp_msg =
         {.pack      = ofl_exp_msg_pack,
@@ -209,7 +219,7 @@ static struct ofl_exp dpctl_exp =
         {.act   = NULL,
          .inst  = NULL,
          .match = &dpctl_exp_match,
-         .stats = NULL,
+         .stats = &dpctl_exp_stats,
          .msg   = &dpctl_exp_msg};
 
 static void
@@ -221,9 +231,11 @@ dpctl_transact(struct vconn *vconn, struct ofl_msg_header *req,
     int error;
      
     error = ofl_msg_pack(req, XID, &bufreq, &bufreq_size, &dpctl_exp);
+   
     if (error) {
         ofp_fatal(0, "Error packing request.");
     }
+
 
     ofpbufreq = ofpbuf_new(0);
     ofpbuf_use(ofpbufreq, bufreq, bufreq_size);
@@ -232,7 +244,6 @@ dpctl_transact(struct vconn *vconn, struct ofl_msg_header *req,
     if (error) {
         ofp_fatal(0, "Error during transaction.");
     }
-    
     error = ofl_msg_unpack(ofpbufrepl->data, ofpbufrepl->size, repl, NULL /*xid_ptr*/, &dpctl_exp);
 
     if (error) {
@@ -480,8 +491,9 @@ stats_flow(struct vconn *vconn, int argc, char *argv[]) {
         if (argc > 1) {
             parse_match(argv[1], &(request.match), preferred_flow_format);
         } else {
-            make_all_match(&(request.match));
+            make_ext_all_match(&(request.match));
         }
+            
             dpctl_transact_and_print(vconn, (struct ofl_msg_header *)&request, NULL);
     }
 
@@ -626,7 +638,7 @@ do_flow_mod(struct vconn *vconn, int argc, char *argv[]) {
              .buffer_id = 0xffffffff,
              .out_port = OFPP_ANY,
              .out_group = OFPG_ANY,
-             .flags = 0x0000,
+             .flags = OFPFF_SEND_FLOW_REM,
              .match = NULL,
              .instructions_num = 0,
              .instructions = NULL};
@@ -664,7 +676,7 @@ do_flow_mod(struct vconn *vconn, int argc, char *argv[]) {
              .buffer_id = 0xffffffff,
              .out_port = OFPP_ANY,
              .out_group = OFPG_ANY,
-             .flags = 0x0000,
+             .flags = OFPFF_SEND_FLOW_REM,
              .match = NULL,
              .instructions_num = 0,
              .instructions = NULL};  
@@ -1514,7 +1526,7 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
             else {
                  struct in6_addr addr, mask;
                  if (str_to_ipv6(token + strlen(MATCH_NW_DST_IPV6)+1, &addr, &mask) < 0) {
-                     ofp_fatal(0, "Error parsing nw_src_ipv6: %s.", token);
+                     ofp_fatal(0, "Error parsing nw_dst_ipv6: %s.", token);
                  }
                  else {
                     
@@ -1531,13 +1543,33 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
                    ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
             }
             else {
-                 ext_put_8(&ext_m->match_fields, TLV_EXT_IPV6_RH_ID , 43 /*Routing Next Header Value */, 0xff);
+                 ext_put_8w(&ext_m->match_fields, TLV_EXT_IPV6_RH_ID , 43 /*Routing Next Header Value */, 0xff);
                  ext_m->header.length += 5;
+            }
+            continue;
+        }
+	/*Routing extension header Addresses */
+        if (strncmp(token, MATCH_ROUTING_ADDRESS_IPV6 , strlen(MATCH_ROUTING_ADDRESS_IPV6 )) == 0) {
+            if(!flow_format){ 
+                   ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
+            }
+            else {
+                 struct in6_addr addr, mask;
+                 if (str_to_ipv6(token + strlen(MATCH_ROUTING_ADDRESS_IPV6)+1, &addr, &mask) < 0) {
+                     ofp_fatal(0, "Error parsing rh_add_ipv6: %s.", token);
+                 }
+                 else {
+                    
+                    ext_put_ipv6(&ext_m->match_fields,TLV_EXT_IPV6_RH_ADDRESS, &addr, &mask);
+                    
+                    }
+                 ext_m->header.length += 36; 
 
             }
             continue;
         }
-        /*Hop by Hop */
+
+        /*Hop by Hop header*/
         if (strncmp(token, MATCH_HBH_HEADER_IPV6 , strlen(MATCH_HBH_HEADER_IPV6 )) == 0) {
             if(!flow_format){ 
                    ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
@@ -1545,12 +1577,72 @@ parse_match(char *str, struct ofl_match_header **match, int flow_format) {
             else {
                  uint8_t v = 0;
                  uint8_t mask = 0xff;
-                 ext_put_8(&ext_m->match_fields, TLV_EXT_IPV6_HBH_ID, v /*Hop by Hop Header Value */, mask);
+                 ext_put_8w(&ext_m->match_fields, TLV_EXT_IPV6_HBH_ID, v /*Hop by Hop Header Value */, mask);
                  ext_m->header.length += 5;
 
             }
             continue;
         }
+	/*Hop by Hop Code*/
+        if (strncmp(token, MATCH_HBH_OPTION_CODE_IPV6 , strlen(MATCH_HBH_OPTION_CODE_IPV6 )) == 0) {
+            if(!flow_format){ 
+                   ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
+            }
+            else {
+                 uint8_t hbh_code;
+                 uint8_t mask = 0xff;
+	         if (parse8(token + strlen(MATCH_HBH_OPTION_CODE_IPV6 KEY_VAL), NULL, 0, 0xff, &(hbh_code))) {
+                    ofp_fatal(0, "Error parsing hbh_code: %s.", token);
+                 }
+                 ext_put_8w(&ext_m->match_fields, TLV_EXT_IPV6_HBH_OPT_CODE, hbh_code /*Hop by Hop Header Value */, mask);
+                 ext_m->header.length += 5;
+
+            }
+            continue;
+        }
+	/*Destination Option Header */
+	if (strncmp(token, MATCH_DO_HEADER_IPV6 , strlen(MATCH_DO_HEADER_IPV6 )) == 0) {
+            if(!flow_format){ 
+                   ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
+            }
+            else {
+                 uint8_t v = 60;
+                 uint8_t mask = 0xff;
+                 ext_put_8w(&ext_m->match_fields, TLV_EXT_IPV6_DOH_ID, v /*Destination Option Header Value */, mask);
+                 ext_m->header.length += 5;
+
+            }
+            continue;
+        }
+	/*Authentication Header */
+	if (strncmp(token, MATCH_AUTHENTICATION_HEADER_IPV6 , strlen(MATCH_AUTHENTICATION_HEADER_IPV6 )) == 0) {
+            if(!flow_format){ 
+                   ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
+            }
+            else {
+                 uint8_t v = 51;
+                 uint8_t mask = 0xff;
+                 ext_put_8w(&ext_m->match_fields, TLV_EXT_IPV6_AH_ID, v /*Authentication Header Value */, mask);
+                 ext_m->header.length += 5;
+
+            }
+            continue;
+        }
+	/*Fragmentation Header */
+	if (strncmp(token, MATCH_FRAGMENT_HEADER_IPV6 , strlen(MATCH_FRAGMENT_HEADER_IPV6 )) == 0) {
+            if(!flow_format){ 
+                   ofp_fatal(0, "IPv6 support need the -F nxm option: %s.", token);
+            }
+            else {
+                 uint8_t v = 44;
+                 uint8_t mask = 0xff;
+                 ext_put_8w(&ext_m->match_fields, TLV_EXT_IPV6_FH_ID, v /*Fragmentation Header Value */, mask);
+                 ext_m->header.length += 5;
+
+            }
+            continue;
+        }
+
         if (strncmp(token, MATCH_METADATA_MASK KEY_VAL, strlen(MATCH_METADATA_MASK KEY_VAL)) == 0) {
             if(!flow_format){ 
                 if (sscanf(token, MATCH_METADATA_MASK KEY_VAL "0x%"SCNx64"", &(m->metadata_mask)) != 1) {
@@ -1586,6 +1678,17 @@ make_all_match(struct ofl_match_header **match) {
     m->nw_src_mask = 0xffffffff;
     m->nw_dst_mask = 0xffffffff;
     m->metadata_mask = 0xffffffffffffffffULL;
+
+    (*match) = (struct ofl_match_header *)m;
+}
+
+static void
+make_ext_all_match(struct ofl_match_header **match) {
+    struct ofl_ext_match *m = xmalloc(sizeof(struct ofl_ext_match));
+
+    m->header.type = EXT_MATCH;
+    m->header.length = sizeof(struct ext_match);
+    flex_array_init(&(m->match_fields));
 
     (*match) = (struct ofl_match_header *)m;
 }

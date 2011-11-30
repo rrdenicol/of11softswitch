@@ -22,6 +22,7 @@
 #include <netinet/in.h>
 #include "ofpbuf.h"
 #include "hmap.h"
+#include "packets.h"
 #include "openflow/match-ext.h"
 #include "oflib-exp/ofl-exp-match.h"
 
@@ -34,21 +35,12 @@ struct nxm_field {
     uint8_t * mask;
 };
 
-//typedef unsigned int __attribute__((bitwise)) flow_wildcards_t;
-
-/* Nicira Extended Match (NXM) flexible flow match helper functions.
- *
- * See include/openflow/ext-match.h for NXM specification.
- */
 
 int 
 ext_pull_match(struct ofl_ext_match * match_src, struct hmap *match_dst);
 
-
-/*int
-nx_ntoh(struct ext_match *match_src, struct ofl_ext_match * match_dst, unsigned int match_len);*/
-
 char *ext_match_to_string(const uint8_t *, unsigned int match_len);
+
 int ext_match_from_string(const char *, struct ofpbuf *);
 
 uint32_t ext_entry_ok(const void *, unsigned int );
@@ -63,43 +55,44 @@ void
 ext_put_header(struct flex_array *f, uint32_t header);
 
 void
-ext_put_32(struct flex_array *f, uint32_t header, uint32_t value);
+ext_put_8(struct flex_array *f, uint32_t header, uint8_t value);
+
+void
+ext_put_8w(struct flex_array *f, uint32_t header, uint8_t value, uint16_t mask);
 
 void
 ext_put_16(struct flex_array *f, uint32_t header, uint16_t value);
 
-/* Upper bound on the length of an nx_match.  The longest nx_match (assuming
- * we implement 4 registers) would be:
- *
- *                   header  value  mask  total
- *                   ------  -----  ----  -----
- *  NXM_OF_IN_PORT      4       2    --      6
- *  NXM_OF_ETH_DST_W    4       6     6     16
- *  NXM_OF_ETH_SRC      4       6    --     10
- *  NXM_OF_ETH_TYPE     4       2    --      6
- *  NXM_OF_VLAN_TCI     4       2     2      8
- *  NXM_OF_IP_TOS       4       1    --      5
- *  NXM_OF_IP_PROTO     4       2    --      6
- *  NXM_OF_IPV6_SRC_W   4      16    16     36
- *  NXM_OF_IPV6_DST_W   4      16    16     36
- *  NXM_OF_ICMP_TYPE    4       1    --      5
- *  NXM_OF_ICMP_CODE    4       1    --      5
- *  NXM_NX_ND_TARGET    4      16    --     20 
- *  NXM_NX_ND_SLL       4       6    --     10 
- *  NXM_NX_REG_W(0)     4       4     4     12
- *  NXM_NX_REG_W(1)     4       4     4     12
- *  NXM_NX_REG_W(2)     4       4     4     12
- *  NXM_NX_REG_W(3)     4       4     4     12
- *  NXM_NX_TUN_ID_W     4       8     8     20
- *  -------------------------------------------
- *  total                                  237
- *
- * So this value is conservative.
- */
-#define NXM_MAX_LEN 256
+void
+ext_put_16w(struct flex_array *f, uint32_t header, uint16_t value, uint16_t mask);
 
-/* This is my guess at the length of a "typical" nx_match, for use in
- * predicting space requirements. */
-#define NXM_TYPICAL_LEN 64
+void
+ext_put_16m(struct flex_array *f, uint32_t header, uint16_t value, uint16_t mask);
+
+void
+ext_put_32(struct flex_array *f, uint32_t header, uint32_t value);
+
+void
+ext_put_32w(struct flex_array *f, uint32_t header, uint32_t value, uint32_t mask);
+
+void
+ext_put_32m(struct flex_array *f, uint32_t header, uint32_t value, uint32_t mask);
+
+void
+ext_put_64(struct flex_array *f, uint32_t header, uint64_t value);
+
+void
+ext_put_64w(struct flex_array *f, uint32_t header, uint64_t value, uint64_t mask);
+
+void
+ext_put_64m(struct flex_array *f, uint32_t header, uint64_t value, uint64_t mask);
+
+void
+ext_put_eth(struct flex_array *f, uint32_t header,
+            const uint8_t value[ETH_ADDR_LEN]);
+            
+void ext_put_ipv6(struct flex_array *f, uint32_t header,
+                    const struct in6_addr *value, const struct in6_addr *mask);
+
 
 #endif /* nx-match.h */

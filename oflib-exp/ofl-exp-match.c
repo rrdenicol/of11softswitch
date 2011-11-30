@@ -35,6 +35,7 @@
 #include <netinet/in.h>
 
 #include "../lib/byte-order.h"
+#include "../lib/packets.h"
 #include "ofl-exp-match.h"
 #include "../oflib/ofl-log.h"
 #include "../oflib/ofl-print.h"
@@ -48,13 +49,6 @@ OFL_LOG_INIT(LOG_MODULE)
 #define ETH_ADDR_ARGS(ea)                                   \
     (ea)[0], (ea)[1], (ea)[2], (ea)[3], (ea)[4], (ea)[5]
 
-#define IP_FMT "%"PRIu8".%"PRIu8".%"PRIu8".%"PRIu8
-#define IP_ARGS(ip)                             \
-        ((uint8_t *) ip)[0],                    \
-        ((uint8_t *) ip)[1],                    \
-        ((uint8_t *) ip)[2],                    \
-        ((uint8_t *) ip)[3]
-
 int
 ofl_exp_match_pack(struct ofl_match_header *src, struct ofp_match_header *dst){
     
@@ -66,6 +60,7 @@ ofl_exp_match_pack(struct ofl_match_header *src, struct ofp_match_header *dst){
         dst_match->header.length = htons(m->header.length);
         memset(dst_match->pad, 0x00, 4); 
         memcpy(&dst_match->match_fields , &m->match_fields, sizeof(m->match_fields) + m->match_fields.size);
+       
 
      } else {
         OFL_LOG_WARN(LOG_MODULE, "Experimenter match is not NXFF_NXM");
@@ -78,10 +73,8 @@ ofl_exp_match_pack(struct ofl_match_header *src, struct ofp_match_header *dst){
 ofl_err
 ofl_exp_match_unpack(struct ofp_match_header *src, size_t *len, struct ofl_match_header **dst){
 
-    
-    struct ofl_ext_match *m = malloc(*len);    
+    struct ofl_ext_match *m; 
     struct ext_match *src_match = (struct ext_match*) src;
-    
     if (*len < ntohs(src->length)) {
         OFL_LOG_WARN(LOG_MODULE, "Received match has invalid length (set to %u, but only %zu received).", 
 ntohs(src->length), *len);
@@ -92,9 +85,7 @@ ntohs(src->length), *len);
     m->header.type = ntohs(src_match->header.type);
     m->header.length = ntohs(src_match->header.length);
     memcpy(&m->match_fields , &src_match->match_fields, sizeof(src_match->match_fields) + src_match->match_fields.size);
-    //nx_ntoh(src_match, m,src_match->match_fields.size);
     *len -=  m->header.length;
-
     *dst = &m->header;
     return 0;
 }
@@ -150,10 +141,8 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
 		            header = NXM_HEADER( NXM_VENDOR(header), NXM_FIELD(header), NXM_LENGTH(header)/2);
                 switch(header){
                     case (TLV_EXT_IN_PORT):{
-                        uint32_t *value = p + 4;
-                        /*Check for byte order */
                         fprintf(stream, " port=\"");   
-                        ofl_port_print(stream, *value);
+                        ofl_port_print(stream,(uint32_t) *(p + 4));
                         fprintf(stream, "\"");
                         p += length + 4; 
                         break;
@@ -171,8 +160,7 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
                         break;
                     }  
                     case (TLV_EXT_DL_VLAN): {
-                        uint16_t *value = p + 4;
-                        fprintf(stream, " dl_vlan=\"0x%"PRIx16"\"", *value); 
+                        fprintf(stream, " dl_vlan=\"0x%"PRIx16"\"", (uint16_t) *(p + 4)); 
                         p += length + 4; 
                         break;
                     
@@ -218,45 +206,55 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
                     
                     }
                     case (TLV_EXT_TP_SRC): {
-                        uint16_t *value = p + 4;
-                        fprintf(stream, " tp_src=\"%"PRIx16"\"", *value); 
+                        fprintf(stream, " tp_src=\"%"PRIx16"\"", (uint16_t) *(p + 4)); 
                         p += length + 4; 
                         break;      
                     }
                    case (TLV_EXT_TP_DST): {
-                        uint16_t *value = p + 4;
-                        fprintf(stream, " tp_dst=\"%"PRIx16"\"", *value); 
+                        fprintf(stream, " tp_dst=\"%"PRIx16"\"", (uint16_t) *(p + 4)); 
                         p += length + 4; 
                         break;
                     
                     }
                     case (TLV_EXT_MPLS_LABEL): {
-                        uint32_t *value = p + 4;
-                        fprintf(stream, " mpls_label=\"%"PRIx32"\"", *value); 
+                        fprintf(stream, " mpls_label=\"%"PRIx32"\"", (uint32_t) *(p + 4)); 
                         p += length + 4; 
                         break;
                     
                     }
                     case (TLV_EXT_MPLS_TC): {
-                        uint32_t *value = p + 4;
-                        fprintf(stream, " mpls_tc=\"%"PRIx32"\"", *value); 
+                        fprintf(stream, " mpls_tc=\"%"PRIx32"\"", (uint8_t) *(p + 4)); 
                         p += length + 4; 
                         break;
                     
                     }
-                    /*case (TLV_EXT_IPV6_SRC): {
-                        uint32_t *value = p + 4;
-                        fprintf(stream, " nw_src_ipv6=\"%"PRIx32"\"", *value); 
+                    case (TLV_EXT_IPV6_SRC): {
+                        char addr_str[INET6_ADDRSTRLEN]; 
+                        struct in6_addr addr;
+                        memcpy(&addr.s6_addr, p + 4, 16);
+                        inet_ntop(AF_INET6, &addr, addr_str, INET6_ADDRSTRLEN);
+                        fprintf(stream, " nw_src_ipv6=\"%s\"", addr_str); 
                         p += length + 4; 
                         break;
                     
-                    }*/
+                    }
+                    case (TLV_EXT_IPV6_DST): {
+                        char addr_str[INET6_ADDRSTRLEN]; 
+                        struct in6_addr addr;
+                        memcpy(&addr.s6_addr, p + 4, 16);
+                        inet_ntop(AF_INET6, &addr, addr_str, INET6_ADDRSTRLEN);
+                        fprintf(stream, " nw_dst_ipv6=\"%s\"", addr_str); 
+                        p += length + 4; 
+                        break;
                     
-                    
+                    }                   
                 
                 }
-            
+                if (i < m->match_fields.total - 1)
+                    fprintf(stream, ",");
             }
+            fprintf(stream, "}");
         }     
     }
+      
 }

@@ -83,7 +83,7 @@ pipeline_handle_table_mod(struct pipeline *pl,
                           struct ofl_msg_table_mod *msg,
                           const struct sender *sender);
 
-/* Handles a flow stats request. */
+/* Handle an extended flow stats request. */
 ofl_err
 pipeline_ext_handle_stats_request_flow(struct pipeline *pl,
                                    struct ofl_ext_flow_stats_request *msg,

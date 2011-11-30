@@ -84,24 +84,6 @@ struct ofl_ext_flow_mod {
     struct ofl_instruction_header **instructions; /* Instruction set */
 };
 
-/* EXT_FLOW_REMOVED (analogous to OFPT_FLOW_REMOVED). */
-struct ofl_ext_flow_removed {
-    struct ofl_ext_msg_header header;
-    uint64_t cookie;          /* Opaque controller-issued identifier. */
-    uint16_t priority;        /* Priority level of flow entry. */
-    uint8_t reason;           /* One of OFPRR_*. */
-    uint8_t table_id;         /* ID of the table */
-    uint32_t duration_sec;    /* Time flow was alive in seconds. */
-    uint32_t duration_nsec;   /* Time flow was alive in nanoseconds beyond
-                                 duration_sec. */
-    uint16_t idle_timeout;    /* Idle timeout from original flow mod. */
-    uint64_t packet_count;
-    uint64_t byte_count;
-    struct ofl_match_header        *match;        /* Fields to match */
-
-};
-
-
 /* Nicira vendor stats request of type EXT_FLOW (analogous to OFPST_FLOW/ OFPST_AGGREGATE
  * request). */
 struct ofl_ext_flow_stats_request {
@@ -109,7 +91,6 @@ struct ofl_ext_flow_stats_request {
     struct ofl_msg_stats_request_experimenter header;
     uint8_t table_id;         /* ID of table to read (from ofp_table_stats),
                                  0xff for all tables. */
-    uint8_t pad;               /* Align to 64 bits. */
     uint32_t out_port;        /* Require matching entries to include this
                                  as an output port.  A value of OFPP_NONE
                                  indicates no restriction. */
@@ -123,6 +104,13 @@ struct ofl_ext_flow_stats_request {
                                  no restriction. */
    struct ofl_match_header   *match;        /* Fields to match */
 
+};
+
+struct ofl_ext_msg_flow_removed {
+   struct ofl_ext_msg_header   header; 
+
+   struct ofl_flow_stats         *stats;
+   enum ofp_flow_removed_reason   reason;   /* One of OFPRR_*. */
 };
 
 
@@ -139,16 +127,35 @@ int
 ofl_msg_ext_pack_flow_mod(struct ofl_ext_flow_mod *msg, uint8_t **buf, size_t *buf_len);
 
 int
-ofl_ext_free_flow_mod(struct ofl_ext_flow_mod *msg, bool with_match, bool with_instructions, struct ofl_exp *exp);
+ofl_ext_pack_flow_removed(struct ofl_ext_msg_flow_removed *msg, uint8_t **buf, size_t *buf_len);
 
 int
-ofl_msg_ext_pack_flow_removed(struct ofl_ext_flow_removed *msg, uint8_t **buf, size_t *buf_len);
+ofl_ext_free_flow_mod(struct ofl_ext_flow_mod *msg, bool with_match, bool with_instructions, struct ofl_exp *exp);
 
 int
 ofl_ext_pack_stats_request_flow(struct ofl_ext_flow_stats_request *msg, uint8_t **buf, size_t *buf_len);
 
 ofl_err
-ofl_msg_unpack_stats_request_flow(struct ofp_stats_request *os, size_t *len, struct ofl_msg_header **msg);
+ofl_ext_unpack_stats_request_flow(struct ofp_stats_request *os, size_t *len, struct ofl_msg_header **msg);
+
+void
+ofl_ext_stats_req_print(struct ofl_ext_flow_stats_request *msg, FILE *stream);
+
+
+
+ofl_err
+ofl_utils_count_ofp_ext_flow_stats(void *data, size_t data_len, size_t *count);
+
+size_t
+ofl_ext_pack_stats_reply(struct ofl_msg_stats_reply_header *msg, uint8_t **buf, size_t *buf_len);
+
+ofl_err
+ofl_ext_unpack_stats_reply(struct ofp_stats_reply *os, size_t *len, struct ofl_msg_stats_reply_header **msg);
+
+void
+ofl_ext_msg_print_stats_reply_flow(struct ofl_msg_stats_reply_experimenter *msg, FILE *stream);
+
+int ofl_ext_stats_reply_free(struct ofl_msg_stats_reply_header *msg);
 
 int
 ofl_msg_pack_stats_reply_aggregate(struct ofl_msg_stats_reply_aggregate *msg, uint8_t **buf, size_t *buf_len);
@@ -158,6 +165,12 @@ ofl_ext_unpack_flow_mod(struct ofp_header *src, size_t *len, struct ofl_msg_expe
 
 ofl_err
 ofl_ext_unpack_flow_removed(struct ofp_header *src, size_t *len, struct ofl_msg_experimenter **msg);
+
+int
+ofl_ext_free_flow_removed(struct ofl_msg_flow_removed *msg, bool with_stats, struct ofl_exp *exp);
+
+int
+ofl_ext_free_stats_req_flow(struct ofl_ext_flow_stats_request *req);
 
 int 
 ofl_ext_msg_free(struct ofl_msg_experimenter *msg);

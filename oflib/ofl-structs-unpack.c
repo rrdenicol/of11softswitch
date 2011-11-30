@@ -283,6 +283,8 @@ ofl_structs_flow_stats_unpack(struct ofp_flow_stats *src, size_t *len, struct of
         }
         return ofl_error(OFPET_BAD_ACTION, OFPBRC_BAD_LEN);
     }
+    
+    
     *len -= (sizeof(struct ofp_flow_stats) - sizeof(struct ofp_match));
 
     s = (struct ofl_flow_stats *)malloc(sizeof(struct ofl_flow_stats));
@@ -302,7 +304,6 @@ ofl_structs_flow_stats_unpack(struct ofp_flow_stats *src, size_t *len, struct of
         free(s);
         return error;
     }
-
     error = ofl_utils_count_ofp_instructions(src->instructions, *len, &s->instructions_num);
     if (error) {
         ofl_structs_free_match(s->match, exp);

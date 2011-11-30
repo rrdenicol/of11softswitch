@@ -40,6 +40,7 @@
 #include "ofl-print.h"
 #include "ofl-log.h"
 #include "openflow/openflow.h"
+#include "openflow/match-ext.h"
 
 #define UNUSED __attribute__((__unused__))
 
@@ -609,6 +610,7 @@ ofl_msg_unpack_stats_request_flow(struct ofp_stats_request *os, size_t *len, str
     dm->cookie_mask = ntoh64(sm->cookie_mask);
 
     error = ofl_structs_match_unpack(&(sm->match.header), len, &(dm->match), exp);
+
     if (error) {
         free(dm);
         return error;
@@ -700,7 +702,6 @@ ofl_msg_unpack_stats_request_group(struct ofp_stats_request *os, size_t *len, st
     return 0;
 }
 
-
 static ofl_err
 ofl_msg_unpack_stats_request_empty(struct ofp_stats_request *os UNUSED, size_t *len, struct ofl_msg_header **msg) {
     // ofp_stats_request length was checked at ofl_msg_unpack_stats_request
@@ -755,11 +756,12 @@ ofl_msg_unpack_stats_request(struct ofp_header *src, size_t *len, struct ofl_msg
         break;
     }
     case OFPST_EXPERIMENTER: {
-        if (exp == NULL || exp->stats == NULL || exp->stats->reply_unpack == NULL) {
+        if (exp == NULL || exp->stats == NULL || exp->stats->req_unpack == NULL) {
             OFL_LOG_WARN(LOG_MODULE, "Received EXPERIMENTER stats request, but no callback was given.");
             error = ofl_error(OFPET_BAD_REQUEST, OFPBRC_BAD_STAT);
         } else {
             error = exp->stats->req_unpack(os, len, (struct ofl_msg_stats_request_header **)msg);
+           
         }
         break;
     }
@@ -802,7 +804,6 @@ ofl_msg_unpack_stats_reply_desc(struct ofp_stats_reply *os, size_t *len, struct 
     *msg = (struct ofl_msg_header *)dm;
     return 0;
 }
-
 
 static ofl_err
 ofl_msg_unpack_stats_reply_flow(struct ofp_stats_reply *os, size_t *len, struct ofl_msg_header **msg, struct ofl_exp *exp) {
@@ -1036,6 +1037,7 @@ ofl_msg_unpack_stats_reply(struct ofp_header *src, size_t *len, struct ofl_msg_h
     struct ofp_stats_reply *os;
     int error;
 
+    
     if (*len < sizeof(struct ofp_stats_reply)) {
         OFL_LOG_WARN(LOG_MODULE, "Received STATS_REPLY message has invalid length (%zu).", *len);
         return ofl_error(OFPET_BAD_REQUEST, OFPBRC_BAD_LEN);
@@ -1096,7 +1098,7 @@ ofl_msg_unpack_stats_reply(struct ofp_header *src, size_t *len, struct ofl_msg_h
     }
 
     ofls = (struct ofl_msg_stats_reply_header *)(*msg);
-    ofls->type = (enum ofp_stats_types)ntohs(os->type);
+    ofls->type = (enum ofp_stats_types) ntohs(os->type);
     ofls->flags = ntohs(os->flags);
 
     return 0;
@@ -1188,7 +1190,7 @@ ofl_msg_unpack(uint8_t *buf, size_t buf_len, struct ofl_msg_header **msg, uint32
     ofl_err error = 0;
 
     
-
+    
     if (len < sizeof(struct ofp_header)) {
         OFL_LOG_WARN(LOG_MODULE, "Received message is shorter than ofp_header.");
         if (xid != NULL) {
@@ -1212,7 +1214,7 @@ ofl_msg_unpack(uint8_t *buf, size_t buf_len, struct ofl_msg_header **msg, uint32
         OFL_LOG_WARN(LOG_MODULE, "Received message length does not match the length field.");
         return ofl_error(OFPET_BAD_REQUEST, OFPBRC_BAD_LEN);
     }
-    
+   
     switch (oh->type) {
         case OFPT_HELLO:
             error = ofl_msg_unpack_empty(oh, &len, msg);
@@ -1279,9 +1281,10 @@ ofl_msg_unpack(uint8_t *buf, size_t buf_len, struct ofl_msg_header **msg, uint32
             break;
 
         /* Statistics messages. */
-        case OFPT_STATS_REQUEST:
+        case OFPT_STATS_REQUEST:{
             error = ofl_msg_unpack_stats_request(oh, &len, msg, exp);
             break;
+            }
         case OFPT_STATS_REPLY:
             error = ofl_msg_unpack_stats_reply(oh, &len, msg, exp);
             break;
@@ -1330,6 +1333,7 @@ ofl_msg_unpack(uint8_t *buf, size_t buf_len, struct ofl_msg_header **msg, uint32
         }
     }
      
+    
    (*msg)->type = (enum ofp_type) oh->type;
     
 

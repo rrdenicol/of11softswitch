@@ -115,6 +115,17 @@ struct remote {
 
 
 /* Callbacks for processing experimenter messages in OFLib. */
+
+static struct ofl_exp_stats dpath_exp_stats = 
+        {.req_pack      = ofl_exp_req_pack,
+         .req_unpack    = ofl_exp_req_unpack,
+         .req_free      = ofl_exp_free_stats_req,
+         .req_to_string = ofl_req_to_string,
+         .reply_pack    = ofl_exp_reply_pack,
+         .reply_unpack  = ofl_exp_reply_unpack,
+         .reply_free    = ext_free_stats_reply ,
+         .reply_to_string     = ext_reply_to_string };
+
 static struct ofl_exp_msg dp_exp_msg =
         {.pack      = ofl_exp_msg_pack,
          .unpack    = ofl_exp_msg_unpack,
@@ -132,7 +143,7 @@ static struct ofl_exp dp_exp =
         {.act   = NULL,
          .inst  = NULL,
          .match = &dp_exp_match,
-         .stats = NULL,
+         .stats = &dpath_exp_stats,
          .msg   = &dp_exp_msg};
 
 /* Generates and returns a random datapath id. */
@@ -264,7 +275,8 @@ remote_run(struct datapath *dp, struct remote *r)
             } else {
                 struct ofl_msg_header *msg;
 
-                struct sender sender = {.remote = r};
+                struct sender sender = {.remote = r};                
+               
                 error = ofl_msg_unpack(buffer->data, buffer->size, &msg, &(sender.xid), dp->exp);
 
                 if (!error) {
@@ -276,7 +288,7 @@ remote_run(struct datapath *dp, struct remote *r)
                 }
 
                 if (error) {
-		   printf("Sending error\n");
+		            printf("Sending error\n");
                     struct ofl_msg_error err =
                             {{.type = OFPT_ERROR},
                              .type = ofl_error_type(error),
@@ -460,15 +472,15 @@ dp_send_message(struct datapath *dp, struct ofl_msg_header *msg,
     }
 
     error = ofl_msg_pack(msg, sender == NULL ? 0 : sender->xid, &buf, &buf_size, dp->exp);
+    
     if (error) {
         VLOG_WARN_RL(LOG_MODULE, &rl, "There was an error packing the message!");
         return error;
     }
-
     ofpbuf = ofpbuf_new(0);
     ofpbuf_use(ofpbuf, buf, buf_size);
     ofpbuf_put_uninit(ofpbuf, buf_size);
-
+    
     error = send_openflow_buffer(dp, ofpbuf, sender);
     if (error) {
         VLOG_WARN_RL(LOG_MODULE, &rl, "There was an error sending the message!");

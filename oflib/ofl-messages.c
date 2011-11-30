@@ -142,7 +142,8 @@ ofl_msg_free_stats_reply(struct ofl_msg_stats_reply_header *msg, struct ofl_exp 
             break;
         }
         case OFPST_EXPERIMENTER: {
-            if (exp == NULL || exp->stats || exp->stats->reply_free == NULL) {
+            
+            if (exp == NULL || exp->stats == NULL || exp->stats->reply_free == NULL) {
                 OFL_LOG_WARN(LOG_MODULE, "Trying to free EXPERIMENTER stats reply, but no callback was given.");
                 break;
             }

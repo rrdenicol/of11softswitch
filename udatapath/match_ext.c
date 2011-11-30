@@ -9,7 +9,7 @@
  *   * Redistributions in binary form must reproduce the above copyright
  *     notice, this list of conditions and the following disclaimer in the
  *     documentation and/or other materials provided with the distribution.
- *   * Neither the name of the Ericsson Research nor the names of its
+ *   * Neither the name of the CPqD nor the names of its
  *     contributors may be used to endorse or promote products derived from
  *     this software without specific prior written permission.
  *
@@ -206,12 +206,14 @@ match_ext_strict(struct ofl_ext_match *a, struct ofl_ext_match *b) {
         return false;
     
     for(i = 0; i < a->match_fields.total; i++){
+         unsigned int len1;
          memcpy(&header1, p1, 4);
          found = 0;
-         unsigned int len1 = NXM_LENGTH(header1); 
+         len1 = NXM_LENGTH(header1); 
          for(j = 0; j < b->match_fields.total; j++){     
+            unsigned int len2;
             memcpy(&header2, p2, 4);
-            unsigned int len2 = NXM_LENGTH(header2);
+            len2 = NXM_LENGTH(header2);
             if (header1 == header2){
                 
                 found = 1;
@@ -343,23 +345,6 @@ nonstrict_ipv6(uint8_t *a, uint8_t *b, uint8_t *am, uint8_t *bm) {
 		   nonstrict_mask64(*((uint64_t *)(a+4)), *((uint64_t *)(b+4)), *((uint64_t *)(am+4)), *((uint64_t *)(bm+4)));
 }
 
-/*static inline bool
-nonstrict_dlvlan(uint16_t a, uint16_t b, uint32_t aw, uint32_t bw) {
-	uint32_t f = OFPFW_DL_VLAN;
-	return (wc(bw, f) && wc(aw, f)) ||
-	      (~wc(bw, f) && (wc(aw, f) || (a == OFPVID_ANY && b != OFPVID_NONE) || a == b));
-}
-
-static inline bool
-nonstrict_dlvpcp(uint16_t avlan, uint16_t apcp, uint16_t bvlan, uint16_t bpcp, uint32_t aw, uint32_t bw) {
-	uint32_t f = OFPFW_DL_VLAN_PCP;
-	return (wc(bw, f) && wc(aw, f)) ||
-	      (~wc(bw, f) && (wc(aw, f) || (avlan == OFPVID_NONE && bvlan == OFPVID_NONE) || apcp == bpcp));
-}*/
-
-
-
-
 bool
 match_ext_nonstrict(struct ofl_ext_match *a, struct ofl_ext_match *b) {
   
@@ -368,21 +353,23 @@ match_ext_nonstrict(struct ofl_ext_match *a, struct ofl_ext_match *b) {
     uint8_t * p2 =  b->match_fields.entries;
     uint32_t header1, header2;  
     uint8_t found;
+    
     if(!b->match_fields.total)
         return true; 
-    
+
     if(a->match_fields.total != b->match_fields.total)
         return false;
     
     for(i = 0; i < a->match_fields.total; i++){
+         unsigned int len1; 
          memcpy(&header1, p1, 4);
          found = 0;
-         unsigned int len1 = NXM_LENGTH(header1); 
+         len1 = NXM_LENGTH(header1);
          for(j = 0; j < b->match_fields.total; j++){     
+            unsigned int len2;
             memcpy(&header2, p2, 4);
-            unsigned int len2 = NXM_LENGTH(header2);
+            len2 = NXM_LENGTH(header2);
             if (header1 == header2){
-                
                 found = 1;
                 p1 +=4;
                 p2 +=4;
@@ -475,6 +462,7 @@ match_ext_nonstrict(struct ofl_ext_match *a, struct ofl_ext_match *b) {
         if (!found)
             return false;
     }
+    
     return true;  
 
 

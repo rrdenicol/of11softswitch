@@ -242,32 +242,6 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
 		proto = proto->NextProto;
 	}
 
-/*	PacketCounter++;
-	if(PacketCounter == 10)
-		PacketCounter = 1;
-*/
-	packet_fields_t *fields;
-
-	HMAP_FOR_EACH (fields,packet_fields_t, hmap_node,pktout){
-		if(fields != NULL)
-		{
-			printf("\nfield: %d    | size: %d     | ",fields->header,NXM_LENGTH(fields->header));
-			field_values_t *iter;
-			int count=0;
-			LIST_T_FOR_EACH(iter, field_values_t, list_node, &fields->fields)
-			{
-				printf("size on len: %d",iter->len);
-		                int x;
-				printf("\n%d          ",count);
-				count++;
-				
-       			        for (x=0;x<NXM_LENGTH(fields->header);x++)
-                		{
-					printf("%02X",iter->value[x]);
-                		}
-			}
-		}
-	}
 	return 1;
 }
 

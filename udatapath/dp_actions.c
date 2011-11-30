@@ -883,6 +883,7 @@ dp_actions_list_has_out_port(size_t actions_num, struct ofl_action_header **acti
 
     for (i=0; i < actions_num; i++) {
         if (actions[i]->type == OFPAT_OUTPUT) {
+       
             struct ofl_action_output *ao = (struct ofl_action_output *)actions[i];
             if (ao->port == port) {
                 return true;

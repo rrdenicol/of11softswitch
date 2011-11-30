@@ -91,8 +91,7 @@ ofl_exp_msg_unpack(struct ofp_header *oh, size_t *len, struct ofl_msg_experiment
         case (EXTENDED_MATCH_ID):{ 
             return ofl_ext_message_unpack(oh, len, msg);     
          }
-        default: {
-                       
+        default: {                     
             
             OFL_LOG_WARN(LOG_MODULE, "Trying to unpack unknown EXPERIMENTER message (%u).", htonl(exp->experimenter));
             return ofl_error(OFPET_BAD_REQUEST, OFPBRC_BAD_EXPERIMENTER);
@@ -124,8 +123,6 @@ ofl_exp_msg_free(struct ofl_msg_experimenter *msg) {
     }
 }
 
-
-
 char *
 ofl_exp_msg_to_string(struct ofl_msg_experimenter *msg) {
     
@@ -150,4 +147,79 @@ ofl_exp_msg_to_string(struct ofl_msg_experimenter *msg) {
             return str;
         }
     }
+}
+
+int ofl_exp_reply_pack(struct ofl_msg_stats_reply_header *msg, uint8_t **buf, size_t *buf_len){
+
+     struct ofl_msg_stats_reply_experimenter * m = (struct ofl_msg_stats_reply_experimenter * ) msg;
+     switch (m->experimenter_id) {
+         case (EXTENDED_MATCH_ID):{
+           return ofl_ext_pack_stats_reply( (struct ofl_msg_stats_reply_header *)msg, buf, buf_len); 
+        }
+     
+     }
+    return 1;
+}
+
+ofl_err ofl_exp_reply_unpack(struct ofp_stats_reply *os, size_t *len, struct ofl_msg_stats_reply_header **msg){
+
+    return ofl_ext_unpack_stats_reply(os, len,  msg); 
+     
+    
+}
+
+int ofl_exp_req_pack(struct ofl_msg_stats_request_header *msg, uint8_t **buf, size_t *buf_len){
+
+     struct ofl_msg_stats_request_experimenter * m = (struct ofl_msg_stats_request_experimenter * ) msg;
+     switch (m->experimenter_id) {
+         case (EXTENDED_MATCH_ID):{
+           return ofl_ext_pack_stats_request_flow((struct ofl_ext_flow_stats_request*)msg, buf, buf_len); 
+        }
+     
+     }
+    return 1;
+}
+
+ofl_err ofl_exp_req_unpack(struct ofp_stats_request *os, size_t *len, struct ofl_msg_stats_request_header **msg){
+
+    return ofl_ext_unpack_stats_request_flow(os, len, (struct ofl_msg_header**) msg); 
+       
+}
+
+int ofl_exp_free_stats_req(struct ofl_msg_stats_request_header *msg){
+
+   return ofl_ext_free_stats_req_flow((struct ofl_ext_flow_stats_request*) msg);
+
+}
+
+char* ofl_req_to_string(struct ofl_msg_stats_request_header *msg){
+
+    char *str;
+    size_t str_size;
+    FILE *stream = open_memstream(&str, &str_size);
+    fprintf(stream, "type = flow");
+    fprintf(stream, "\", flags=\"0x%"PRIx32"\"", msg->flags);
+    ofl_ext_stats_req_print((struct ofl_ext_flow_stats_request *) msg, stream); 
+    fclose(stream);
+    return str;
+
+}
+
+char * ext_reply_to_string (struct ofl_msg_stats_reply_header *msg)
+{
+    char *str;
+    size_t str_size;
+    FILE *stream = open_memstream(&str, &str_size);
+    struct ofl_msg_stats_reply_experimenter *exp = ( struct ofl_msg_stats_reply_experimenter *) msg;
+    ofl_ext_msg_print_stats_reply_flow(exp, stream);
+    fclose(stream);
+    return str;
+
+}  
+
+int ext_free_stats_reply (struct ofl_msg_stats_reply_header *msg){
+ 
+    ofl_ext_stats_reply_free(msg);
+    return 0;
+ 
 }

@@ -355,7 +355,7 @@ ext_put_32w(struct flex_array *f, uint32_t header, uint32_t value, uint32_t mask
 }
 
 void
-nxm_put_32m(struct flex_array *f, uint32_t header, uint32_t value, uint32_t mask)
+ext_put_32m(struct flex_array *f, uint32_t header, uint32_t value, uint32_t mask)
 {
     switch (mask) {
     case 0:
@@ -386,16 +386,7 @@ ext_put_64w(struct flex_array *f, uint32_t header, uint64_t value, uint64_t mask
     flex_array_put(f, &mask, sizeof mask);
 }
 
-void ext_put_ipv6(struct flex_array *f, uint32_t header,
-                    const struct in6_addr *value, const struct in6_addr *mask){
-      
-    ext_put_header(f, header);
-    flex_array_put(f, value, sizeof( struct in6_addr));
-    flex_array_put(f, mask, sizeof (struct in6_addr));
-    f->total++;
-}              
-                           
-
+          
 void
 ext_put_64m(struct flex_array *f, uint32_t header, uint64_t value, uint64_t mask)
 {
@@ -422,7 +413,17 @@ ext_put_eth(struct flex_array *f, uint32_t header,
     f->total++;
 }
 
-/*static void
+void ext_put_ipv6(struct flex_array *f, uint32_t header,
+                    const struct in6_addr *value, const struct in6_addr *mask){
+      
+    ext_put_header(f, header);
+    flex_array_put(f, value, sizeof( struct in6_addr));
+    flex_array_put(f, mask, sizeof (struct in6_addr));
+    f->total++;
+}    
+
+/* TODO: put the ethernet destiny address handling possible masks
+static void
 ext_put_eth_dst(struct ofpbuf *b,
                 uint32_t wc, const uint8_t value[ETH_ADDR_LEN])
 {
@@ -442,22 +443,6 @@ ext_put_eth_dst(struct ofpbuf *b,
     case 0:
         nxm_put_eth(b, NXM_OF_ETH_DST, value);
         break;
-    }
-}
-
-/*static void
-nxm_put_ipv6(struct ofpbuf *b, uint32_t header,
-             const struct in6_addr *value, const struct in6_addr *mask)
-{
-    if (ipv6_mask_is_any(mask)) {
-        return;
-    } else if (ipv6_mask_is_exact(mask)) {
-        nxm_put_header(b, header);
-        ofpbuf_put(b, value, sizeof *value);
-    } else {
-        nxm_put_header(b, NXM_MAKE_WILD_HEADER(header));
-        ofpbuf_put(b, value, sizeof *value);
-        ofpbuf_put(b, mask, sizeof *mask);
     }
 }*/
 
