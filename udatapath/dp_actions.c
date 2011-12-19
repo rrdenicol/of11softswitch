@@ -774,7 +774,7 @@ dp_execute_action(struct packet *pkt,
             break;
         }
         case (OFPAT_EXPERIMENTER): {
-        	dp_exp_action(pkt, (struct ofl_action_experimenter *)action);
+            dp_exp_action(pkt, (struct ofl_action_experimenter *)action);
             break;
         }
         default: {
@@ -810,11 +810,12 @@ dp_execute_action_list(struct packet *pkt,
         } else if (pkt->out_port != OFPP_ANY) {
             uint32_t port = pkt->out_port;
             uint32_t queue = pkt->out_queue;
+            uint16_t max_len = pkt->out_port_max_len;
             pkt->out_port = OFPP_ANY;
             pkt->out_port_max_len = 0;
             pkt->out_queue = 0;
             VLOG_DBG_RL(LOG_MODULE, &rl, "Port action; sending to port (%u).", port);
-            dp_actions_output_port(pkt, port, queue);
+            dp_actions_output_port(pkt, port, queue, max_len);
         }
 
     }
@@ -822,7 +823,7 @@ dp_execute_action_list(struct packet *pkt,
 
 
 void
-dp_actions_output_port(struct packet *pkt, uint32_t out_port, uint32_t out_queue) {
+dp_actions_output_port(struct packet *pkt, uint32_t out_port, uint32_t out_queue, uint16_t max_len) {
 
     switch (out_port) {
         case (OFPP_TABLE): {
@@ -851,7 +852,7 @@ dp_actions_output_port(struct packet *pkt, uint32_t out_port, uint32_t out_queue
                          .total_len   = pkt->buffer->size,
                          .reason      = OFPR_ACTION,
                          .table_id    = pkt->table_id,
-                         .data_length = MIN(pkt->out_port_max_len, pkt->buffer->size),
+                         .data_length = MIN(max_len, pkt->buffer->size),
                          .data        = pkt->buffer->data};
 
                 dp_send_message(pkt->dp, (struct ofl_msg_header *)&msg, NULL);
@@ -883,7 +884,6 @@ dp_actions_list_has_out_port(size_t actions_num, struct ofl_action_header **acti
 
     for (i=0; i < actions_num; i++) {
         if (actions[i]->type == OFPAT_OUTPUT) {
-       
             struct ofl_action_output *ao = (struct ofl_action_output *)actions[i];
             if (ao->port == port) {
                 return true;

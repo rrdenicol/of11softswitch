@@ -79,8 +79,6 @@ packet_handle_std_validate(struct packet_handle_std *handle) {
         m->header.type = OFPMT_STANDARD;
         m->in_port     = pkt->in_port;
         m->metadata    = current_metadata;
-        m->metadata_mask = 0xffffffffffffffffULL; /* set to ALL, so
-                                                     overlap check can be reused */
 
         /* Ethernet */
 
@@ -352,9 +350,8 @@ packet_handle_std_is_fragment(struct packet_handle_std *handle) {
 bool
 packet_handle_std_match(struct packet_handle_std *handle, struct ofl_match_standard *match) {
     packet_handle_std_validate(handle);
-    bool ma = match_std_nonstrict(handle->match, match);
-    printf("MATCH %d\n",ma);
-    return match;
+
+    return match_std_pkt(match, handle->match);
 }
 
 /* If pointer is not null, returns str; otherwise returns an empty string. */

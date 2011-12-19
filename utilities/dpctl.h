@@ -107,7 +107,6 @@ static struct names32 buffer_names[] = {
         {0xffffffff, "none"}
 };
 
-
 static struct names32 wildcard_names[] = {
         {OFPFW_IN_PORT,     "in_port"},
         {OFPFW_DL_VLAN,     "dl_vlan"},

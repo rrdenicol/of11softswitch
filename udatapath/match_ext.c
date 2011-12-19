@@ -124,28 +124,34 @@ packet_match(struct hmap *a, struct hmap *b){
                             return false;
                         }
                         else break;
-                        } 
+                    } 
                     case (sizeof(uint32_t)):{ 
                         if(sized32_matches(f->value,f->mask, values->value) == 0)
                             return false;
                         else break;
-                        }
+                    }
                     case (ETHADDLEN):{ 
                         if(eth_matches(f->value, f->mask, values->value ) == 0 )
                             return false;
                         else break;
-                        }
+                    }
                     case (sizeof(uint64_t)):{ 
                         if(eth_matches(f->value,f->mask, values->value) == 0)
                             return false;
                         else break;
-                        }
-                    case (16):{ 
-                        if(ipv6_matches(f->value,  f->mask,values->value) == 0 )
-                            return false;
-                        else break;
-                        }    
                     }
+   		    case (16):{
+                        uint8_t ipv6_count = 0;
+			uint8_t list_size = list_t_size(&packet_f->fields); 
+                        if(ipv6_matches(f->value,  f->mask,values->value) == 0 ){
+                            if( ipv6_count < list_size -1 )
+                               ipv6_count++;
+                            else return false; 
+				    
+			}                        
+			else break;
+                      }
+                }
             }
         } 
         if (!ret)

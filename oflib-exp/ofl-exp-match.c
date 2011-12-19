@@ -247,8 +247,43 @@ ofl_exp_match_print(FILE *stream, struct ofl_match_header *match){
                         p += length + 4; 
                         break;
                     
-                    }                   
-                
+                    }
+                  case (TLV_EXT_IPV6_HBH_ID):{
+                        fprintf(stream,"hbh_ipv6");
+                        p += length + 4;
+                        break;
+                  
+                  } 
+                  case (TLV_EXT_IPV6_RH_ID):{
+                        fprintf(stream,"rh_ipv6");
+                        p += length + 4;
+                        break;
+                  
+                  } 
+                  case (TLV_EXT_IPV6_DOH_ID):{
+                        fprintf(stream,"doh_ipv6");
+                        p += length + 4;
+                        break;
+                  
+                  } 
+                  case (TLV_EXT_IPV6_AH_ID):{
+                        fprintf(stream,"ah_ipv6");
+                        p += length + 4;
+                        break;
+                  
+                  }
+                  case (TLV_EXT_IPV6_RH_ADDRESS): {
+                        char addr_str[INET6_ADDRSTRLEN]; 
+                        struct in6_addr addr;
+                        memcpy(&addr.s6_addr, p + 4, 16);
+                        inet_ntop(AF_INET6, &addr, addr_str, INET6_ADDRSTRLEN);
+                        fprintf(stream, " rh_add_ipv6=\"%s\"", addr_str); 
+                        p += length + 4; 
+                        break;
+                    
+                    }
+                  
+                                    
                 }
                 if (i < m->match_fields.total - 1)
                     fprintf(stream, ",");

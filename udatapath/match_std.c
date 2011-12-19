@@ -72,7 +72,6 @@ strict_wild32(uint32_t a, uint32_t b, uint32_t aw, uint32_t bw, uint32_t f) {
 	      (~wc(aw, f) && ~wc(bw, f) && a == b);
 }
 
-
 static inline bool
 strict_mask16(uint16_t a, uint16_t b, uint16_t am, uint16_t bm) {
 	return (am == bm) && ((a ^ b) & ~am) == 0;

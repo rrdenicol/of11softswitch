@@ -320,6 +320,7 @@
 #define TLV_EXT_METADATA_W NXM_HEADER_W (0x0001, 2, 8)
 
 
+
 /* ## ------------------------------- ## */
 /* ## IPv6 compatible fields. ## */
 /* ## ------------------------------- ## */
@@ -347,7 +348,8 @@
 #define TLV_EXT_IPV6_TC_W NXM_HEADER_W (0x0002, 5, 1)
 
 /* IPv6 Hop-by-Hop EH ID*/
-#define TLV_EXT_IPV6_HBH_ID NXM_HEADER (0x0002, 8, 1) 
+#define TLV_EXT_IPV6_HBH_ID NXM_HEADER (0x0002, 8, 1)
+#define TLV_EXT_IPV6_HBH_ID_W NXM_HEADER_W (0x0002, 8, 1)  
 
 #define TLV_EXT_IPV6_HBH_OPT_CODE NXM_HEADER (0x0002, 9, 1) 
 
@@ -355,6 +357,7 @@
 
 /* IPv6 Destination Option EH ID*/
 #define TLV_EXT_IPV6_DOH_ID NXM_HEADER (0x0002, 16, 1)
+#define TLV_EXT_IPV6_DOH_ID_W NXM_HEADER_W (0x0002, 16, 1)
 
 #define TLV_EXT_IPV6_DOH_OPT_CODE NXM_HEADER (0x0002, 17, 1)
 
@@ -363,14 +366,17 @@
 
 /* IPv6 Routing EH ID*/ 
 #define TLV_EXT_IPV6_RH_ID NXM_HEADER (0x0002, 24, 1)
+#define TLV_EXT_IPV6_RH_ID_W NXM_HEADER_W (0x0002, 24, 1)
 
 #define TLV_EXT_IPV6_RH_ADDRESS NXM_HEADER (0x0002, 25, 16)
 
 /* IPv6 Fragmentation EH ID*/
 #define TLV_EXT_IPV6_FH_ID NXM_HEADER (0x0002, 32, 1)
+#define TLV_EXT_IPV6_FH_ID_W NXM_HEADER_W (0x0002, 32, 1)
 
 /* IPv6 Authentication EH ID*/ 
 #define TLV_EXT_IPV6_AH_ID NXM_HEADER (0x0002, 40, 1)
+#define TLV_EXT_IPV6_AH_ID_W NXM_HEADER_W (0x0002, 40, 1)
 
 /* IPv6 Encapsulating Security Payload */ 
 #define TLV_EXT_IPV6_ESP_ID NXM_HEADER (0x0002, 48, 1) 

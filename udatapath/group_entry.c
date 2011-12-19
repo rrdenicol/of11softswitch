@@ -68,6 +68,9 @@ static uint16_t
 gcd(uint16_t a, uint16_t b);
 
 static bool
+bucket_is_leaf(struct ofl_bucket *bucket);
+
+static bool
 bucket_is_alive(struct ofl_bucket *bucket);
 
 static void
@@ -133,8 +136,9 @@ group_entry_destroy(struct group_entry *entry) {
     // remove all referencing flows
     LIST_FOR_EACH_SAFE(ref, next, struct flow_ref_entry, node, &entry->flow_refs) {
         flow_entry_remove(ref->entry, OFPRR_GROUP_DELETE);
-        // no point in decreasing stats counter
-        free(ref);
+        // Note: the flow_ref_entryf will be destroyed after a chain of calls in flow_entry_remove
+        // no point in decreasing stats counter, as the group is destroyed anyway
+
     }
 
     ofl_structs_free_group_desc_stats(entry->desc, entry->dp->exp);
@@ -343,6 +347,19 @@ group_entry_del_flow_ref(struct group_entry *entry, struct flow_entry *fe) {
     }
 }
 
+/* Returns true if the bucket has no group actions. */
+static bool
+bucket_is_leaf(struct ofl_bucket *bucket) {
+    size_t i;
+
+    for (i=0; i<bucket->actions_num; i++) {
+        if (bucket->actions[i]->type == OFPAT_GROUP) {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 /* Returns true if the bucket is alive. */
 static bool
@@ -351,6 +368,18 @@ bucket_is_alive(struct ofl_bucket *bucket UNUSED) {
     return true;
 }
 
+bool
+group_entry_is_leaf(struct group_entry *entry) {
+    size_t i;
+
+    for (i=0; i<entry->desc->buckets_num; i++) {
+        if (!bucket_is_leaf(entry->desc->buckets[i])) {
+            return false;
+        }
+    }
+
+    return true;
+}
 
 /* Initializes the private w.r.r. data for a select group entry. */
 static void
