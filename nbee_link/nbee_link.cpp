@@ -101,25 +101,43 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
         	field = proto->FirstField;
               	while(1)
                	{
-			
-			if((char)field->LongName[0]<58 && (char)field->LongName[0]>47 && field->isField )
-                        {
-				/* A value between 47 and 58 indicates a field defined for Matching */
-	                        int i,pow;
-                                uint32_t type;
-                                uint8_t size;
+			if ((char)field->LongName[0]=='{')
+			{
+		                int i=1,pow=1,count,mark;
+	                        uint32_t type,vendor;
+				uint8_t size;
+
 				packet_fields_t * pktout_field;
-		                pktout_field = (packet_fields_t*) malloc(sizeof(packet_fields_t));
+			        pktout_field = (packet_fields_t*) malloc(sizeof(packet_fields_t));
 
-
-                                field_values_t *new_field;
-                                new_field = (field_values_t *)malloc(sizeof(field_values_t));
+		                field_values_t *new_field;
+                	        new_field = (field_values_t *)malloc(sizeof(field_values_t));
 				new_field->len = (uint32_t) field->Size;
 
-                                for (type=0,i=0,pow=100;i<3;i++,pow = (pow==1 ? pow : pow/10))
-        	                        type = type + (pow*(field->LongName[i]-48));
-		                        
+				for(i=1,pow = 1;field->LongName[i]!=44;i++)
+				{
+					pow = (i!=1 ? pow*10 : 1);
+				}
+				mark = i;
+
+				for(vendor=0,count=1;count<i;count++,pow = (pow==1 ? pow : pow/10))
+				{
+					vendor = vendor + (pow*(field->LongName[count]-48));
+				}
+				for(pow=1,type=0,pow =1;field->LongName[i]!='}';i++)
+				{
+					pow = (i==mark+1 ? 1 : pow*10 );
+				}
+				for (count=mark+1,type=0;count<i;count++,pow = (pow==1 ? pow : pow/10))
+				{
+					printf("\ni = %d     , count = %d    , type = %c",i,count,field->LongName[count]);
+       	                        	type = type + (pow*(field->LongName[count]-48));
+				}
+
+				type = (uint32_t) (vendor<<7)+(type);
+
 				size = field->Size;
+
 
                                 pktout_field->header = NXM_HEADER(VENDOR_FROM_TYPE(type),FIELD_FROM_TYPE(type),size); 
                                 new_field->value = (uint8_t*) malloc(field->Size);
@@ -146,6 +164,7 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
                                 	hmap_insert(pktout, &pktout_field->hmap_node,
 	                        	hash_int(pktout_field->header, 0));
 				}
+
 				done =0;
 
 			}
@@ -161,20 +180,38 @@ extern "C" int nbee_link_convertpkt(struct ofpbuf * pktin, struct hmap * pktout)
 			}
 			else if (!field->NextField->isField)
 			{
-
-				if ((char)field->NextField->LongName[0]<58 && (char)field->NextField->LongName[0]>47)
+				if ((char)field->NextField->LongName[0] == '{')
 				{
-		                        int i,pow;
-	                                uint32_t type;
+					int i=1,pow=1,count,mark;
+		                        uint32_t type,vendor;
 					packet_fields_t * pktout_field;
-			                pktout_field = (packet_fields_t*) malloc(sizeof(packet_fields_t));
+				        pktout_field = (packet_fields_t*) malloc(sizeof(packet_fields_t));
+	
+			                field_values_t *new_field;
+	                	        new_field = (field_values_t *)malloc(sizeof(field_values_t));
+					new_field->len = (uint32_t) field->Size;
 
-		                        field_values_t *new_field;
-                	                new_field = (field_values_t *)malloc(sizeof(field_values_t));
+					for(i=1,pow = 1;field->NextField->LongName[i]!=44;i++)
+					{
+						pow = (i!=1 ? pow*10 : 1);
+					}
+					mark = i;
+	
+					for(vendor=0,count=1;count<i;count++,pow = (pow==1 ? pow : pow/10))
+					{
+						vendor = vendor + (pow*(field->NextField->LongName[count]-48));
+					}
+					for(pow=1,type=0,pow =1;field->NextField->LongName[i]!='}';i++)
+					{
+						pow = (i==mark+1 ? 1 : pow*10);
+					}
+					for (count=mark+1,type=0;count<i;count++,pow = (pow==1 ? pow : pow/10))
+					{
+						printf("\ni = %d     , count = %d    , type = %c",i,count,field->NextField->LongName[count]);
+	       	                        	type = type + (pow*(field->NextField->LongName[count]-48));
+					}
+					type = (uint32_t) (vendor<<7)+(type);
 
-					for (type=0,i=0,pow=100;i<3;i++,pow = (pow==1 ? pow : pow/10))
-        	                        	type = type + (pow*(field->NextField->LongName[i]-48));
-								
 				        new_field->value = (uint8_t*) malloc(field->Size);
 					_nbPDMLField * nbPrevField; 
 				
